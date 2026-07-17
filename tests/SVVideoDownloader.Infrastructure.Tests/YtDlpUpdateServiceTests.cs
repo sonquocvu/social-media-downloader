@@ -171,6 +171,16 @@ public sealed class YtDlpUpdateServiceTests
             string executablePath,
             CancellationToken cancellationToken = default) =>
             Task.FromResult(_statuses.Dequeue());
+
+        public Task<ExternalToolStatus> CheckFfmpegAsync(
+            string executablePath,
+            CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
+
+        public Task<ExternalToolStatus> CheckFfprobeAsync(
+            string executablePath,
+            CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
     }
 
     private sealed class NullLogger : IDiagnosticLogger

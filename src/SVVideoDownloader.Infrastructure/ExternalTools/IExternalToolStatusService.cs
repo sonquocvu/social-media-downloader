@@ -8,4 +8,12 @@ public interface IExternalToolStatusService
     Task<ExternalToolStatus> CheckYtDlpAsync(
         string executablePath,
         CancellationToken cancellationToken = default);
+
+    Task<ExternalToolStatus> CheckFfmpegAsync(
+        string executablePath,
+        CancellationToken cancellationToken = default);
+
+    Task<ExternalToolStatus> CheckFfprobeAsync(
+        string executablePath,
+        CancellationToken cancellationToken = default);
 }

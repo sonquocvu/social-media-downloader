@@ -77,6 +77,7 @@ public partial class App : Application
             services.AddSingleton<IFileDownloadClient, HttpFileDownloadClient>();
             services.AddSingleton<IExternalToolStatusService, ExternalToolStatusService>();
             services.AddSingleton<IYtDlpUpdateService, YtDlpUpdateService>();
+            services.AddSingleton<IFfmpegUpdateService, FfmpegUpdateService>();
             services.AddSingleton<IToolManagementService, ToolManagementService>();
             services.AddSingleton<MainWindowViewModel>();
             services.AddSingleton<MainWindow>();

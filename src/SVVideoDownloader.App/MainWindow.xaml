@@ -27,22 +27,12 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <StackPanel Orientation="Horizontal">
-                    <Border Width="46"
-                            Height="46"
-                            CornerRadius="14">
-                        <Border.Background>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                <GradientStop Offset="0" Color="#8B7DFF" />
-                                <GradientStop Offset="1" Color="#5542D9" />
-                            </LinearGradientBrush>
-                        </Border.Background>
-                        <TextBlock HorizontalAlignment="Center"
-                                   VerticalAlignment="Center"
-                                   FontSize="16"
-                                   FontWeight="Bold"
-                                   Foreground="White"
-                                   Text="SV" />
-                    </Border>
+                    <Image x:Name="ApplicationLogo"
+                           Width="46"
+                           Height="46"
+                           Source="Assets/SVVideoDownloader.png"
+                           Stretch="Uniform"
+                           AutomationProperties.Name="Biểu tượng SV Video Downloader" />
                     <StackPanel Margin="14,1,0,0" VerticalAlignment="Center">
                         <TextBlock FontSize="20"
                                    FontWeight="Bold"
@@ -324,7 +314,8 @@
                                    Text="Chưa có tác vụ tải xuống."
                                    Visibility="{Binding IsQueueEmpty, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
-                        <ListBox MaxHeight="470"
+                        <ListBox x:Name="DownloadQueueList"
+                                 MaxHeight="470"
                                  BorderThickness="0"
                                  Background="Transparent"
                                  ItemsSource="{Binding DownloadQueue}"
@@ -374,8 +365,8 @@
                                                          Height="9"
                                                          Minimum="0"
                                                          Maximum="100"
-                                                         Value="{Binding PercentageValue}"
-                                                         IsIndeterminate="{Binding IsProgressIndeterminate}"
+                                                         Value="{Binding PercentageValue, Mode=OneWay}"
+                                                         IsIndeterminate="{Binding IsProgressIndeterminate, Mode=OneWay}"
                                                          AutomationProperties.Name="Tiến độ tải xuống" />
 
                                             <Grid Grid.Row="2" Margin="0,8,0,0">
@@ -574,6 +565,7 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <Grid>
@@ -630,30 +622,66 @@
                     </ItemsControl>
 
                     <Border Grid.Row="2"
-                            Margin="0,10,0,28"
-                            Style="{StaticResource SectionBorder}">
-                        <StackPanel>
-                            <TextBlock Style="{StaticResource SectionTitleText}"
-                                       Text="Cập nhật yt-dlp thủ công" />
-                            <TextBlock Margin="0,9,0,0"
-                                       Style="{StaticResource SecondaryText}"
-                                       Text="Chỉ cập nhật khi bạn bấm nút. Ứng dụng tải yt-dlp.exe và SHA2-256SUMS từ bản phát hành ổn định chính thức, kiểm tra SHA-256, xác minh executable, rồi thay thế nguyên tử. Nếu bản mới không chạy, ứng dụng thử khôi phục bản cũ."
-                                       TextWrapping="Wrap" />
-                            <TextBlock Margin="0,8,0,0"
-                                       Foreground="{DynamicResource WarningTextBrush}"
-                                       Text="Không thể cập nhật trong lúc đang phân tích hoặc tải video. Ứng dụng không tự nhập cookie trình duyệt và không cập nhật ngầm."
-                                       TextWrapping="Wrap" />
-                            <TextBlock Margin="0,12,0,0"
-                                       Text="{Binding ToolsMessage}"
-                                       TextWrapping="Wrap" />
-                            <Button Margin="0,15,0,0"
-                                    HorizontalAlignment="Left"
-                                    MinWidth="190"
-                                    Style="{StaticResource PrimaryButton}"
-                                    Command="{Binding UpdateYtDlpCommand}"
-                                    Content="_Cập nhật yt-dlp" />
-                        </StackPanel>
+                            Margin="0,8,0,0"
+                            Style="{StaticResource InfoBanner}">
+                        <TextBlock Text="{Binding ToolsMessage}"
+                                   TextWrapping="Wrap" />
                     </Border>
+
+                    <Grid Grid.Row="3" Margin="0,14,0,28">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0" Style="{StaticResource SectionBorder}">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource SectionTitleText}"
+                                           Text="Cập nhật yt-dlp thủ công" />
+                                <TextBlock Margin="0,9,0,0"
+                                           Style="{StaticResource SecondaryText}"
+                                           Text="Tải yt-dlp.exe và SHA2-256SUMS từ bản phát hành ổn định chính thức, kiểm tra SHA-256, xác minh executable rồi thay thế nguyên tử."
+                                           TextWrapping="Wrap" />
+                                <TextBlock Margin="0,8,0,0"
+                                           Foreground="{DynamicResource WarningTextBrush}"
+                                           Text="Không thể cập nhật trong lúc đang phân tích hoặc tải video."
+                                           TextWrapping="Wrap" />
+                                <Button Margin="0,15,0,0"
+                                        HorizontalAlignment="Left"
+                                        MinWidth="190"
+                                        Style="{StaticResource PrimaryButton}"
+                                        Command="{Binding UpdateYtDlpCommand}"
+                                        Content="_Cập nhật yt-dlp" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="2" Style="{StaticResource SectionBorder}">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource SectionTitleText}"
+                                           Text="Cài đặt hoặc cập nhật FFmpeg" />
+                                <TextBlock Margin="0,9,0,0"
+                                           Style="{StaticResource SecondaryText}"
+                                           Text="Tải gói Release Essentials x64 từ gyan.dev, nguồn bản dựng Windows được trang tải chính thức của FFmpeg liên kết. Ứng dụng kiểm tra SHA-256, chỉ lấy ffmpeg.exe và ffprobe.exe, xác minh cả hai rồi thay thế cùng khả năng khôi phục."
+                                           TextWrapping="Wrap" />
+                                <TextBlock Margin="0,8,0,0"
+                                           Foreground="{DynamicResource WarningTextBrush}"
+                                           Text="Bản dựng này được cấp phép GPLv3. Đây là thao tác thủ công và không chạy ngầm."
+                                           TextWrapping="Wrap" />
+                                <CheckBox Margin="0,12,0,0"
+                                          IsChecked="{Binding FfmpegLicenseConfirmed, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          Content="Tôi xác nhận tải gói FFmpeg x64 từ gyan.dev và đã đọc thông tin GPLv3."
+                                          ToolTip="Cần xác nhận trước mỗi lần cài đặt hoặc cập nhật FFmpeg."
+                                          AutomationProperties.Name="Xác nhận nguồn và giấy phép FFmpeg" />
+                                <Button Margin="0,15,0,0"
+                                        HorizontalAlignment="Left"
+                                        MinWidth="235"
+                                        Style="{StaticResource PrimaryButton}"
+                                        Command="{Binding UpdateFfmpegCommand}"
+                                        Content="_Cài đặt / cập nhật FFmpeg" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
                 </Grid>
             </ScrollViewer>
         </TabItem>

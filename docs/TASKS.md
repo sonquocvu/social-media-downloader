@@ -32,6 +32,8 @@ Ngày cập nhật: 2026-07-17.
 - [x] Thêm diagnostic log 1 MiB × 5 với redaction cookie/secret/token/URL.
 - [x] Thêm màn hình trạng thái và phiên bản yt-dlp/FFmpeg/ffprobe.
 - [x] Thêm updater yt-dlp thủ công dùng SHA-256, tệp tạm, replace và rollback.
+- [x] Thêm updater thủ công cho gói FFmpeg/ffprobe Release Essentials x64: xác
+      nhận nguồn/GPLv3, SHA-256, giải nén chọn lọc và rollback theo cặp.
 - [x] Chặn updater khi metadata/download hoạt động và chặn download khi update.
 - [x] Thêm profile publish self-contained single-file win-x64.
 - [x] Thêm tài liệu thiết lập và khắc phục sự cố cho sử dụng riêng.
@@ -41,8 +43,10 @@ Ngày cập nhật: 2026-07-17.
 ## P0 — quyết định trước khi triển khai tải
 
 - [ ] Duyệt nội dung xác nhận quyền của người dùng và luồng từ chối.
-- [x] Chọn yt-dlp update thủ công có chấp thuận; FFmpeg/ffprobe do người dùng tự thiết lập.
-- [ ] Chọn artifact/phiên bản, xác minh giấy phép, checksum/chữ ký và lập third-party notices.
+- [x] Chọn updater thủ công có chấp thuận cho yt-dlp và gói FFmpeg/ffprobe.
+- [x] Chọn `ffmpeg-release-essentials.zip` x64 mới nhất từ gyan.dev, SHA-256
+      sidecar và GPLv3 cho private-use; chưa chấp thuận bundle/phân phối lại.
+- [ ] Xác minh chữ ký/attestation độc lập và lập third-party notices trước phát hành rộng.
 - [ ] Quyết định có hỗ trợ `yt-dlp-ejs`/JavaScript runtime hay không.
 - [ ] Xác định phiên bản Windows tối thiểu và phương thức đóng gói/ký mã.
 - [ ] Hoàn thành threat model cho URL, đường dẫn, process, log và tệp tạm.
@@ -75,6 +79,8 @@ Ngày cập nhật: 2026-07-17.
       cơ bản cho mức 125%/150%.
 - [x] Không đưa stderr, URL, cookie hoặc secret vào thông báo giao diện.
 - [x] Thêm bảng màu sáng/tối, nút chuyển giao diện bằng tiếng Việt và kiểm thử ViewModel/XAML.
+- [x] Thêm biểu tượng ứng dụng đa độ phân giải và dùng nhận diện mới trong phần đầu giao diện.
+- [x] Sửa binding tiến độ hàng đợi thành một chiều để mục tải đầu tiên không làm WPF dừng ứng dụng.
 - [ ] Kiểm thử thủ công với screen reader, high contrast và DPI 125%/150% trên
       các phiên bản Windows tối thiểu sau khi quyết định phạm vi hỗ trợ.
 - [ ] Quyết định chính sách xử lý tệp trùng tên và ghi đè trước khi phát hành.
@@ -83,7 +89,7 @@ Ngày cập nhật: 2026-07-17.
 
 - [ ] Thiết lập CI Windows x64 cho restore, build và test.
 - [ ] Tạo kiểm thử tích hợp có fixture hợp pháp do dự án sở hữu.
-- [x] Thiết kế cập nhật/rollback yt-dlp; ứng dụng và FFmpeg chưa tự cập nhật.
+- [x] Thiết kế cập nhật/rollback yt-dlp và gói FFmpeg/ffprobe; không cập nhật ngầm.
 - [ ] Tạo SBOM, third-party notices và quy trình rà soát security advisory.
 - [ ] Xác minh đóng gói sạch không chứa binary chưa phê duyệt.
 - [ ] Bổ sung xác minh chữ ký GPG/release attestation cho checksum nếu phát hành rộng.
@@ -96,6 +102,6 @@ Ngày cập nhật: 2026-07-17.
 - Chưa quyết định dependency JavaScript cần cho hỗ trợ YouTube đầy đủ.
 
 App private-use dùng `%LOCALAPPDATA%\SVVideoDownloader\tools`; không bundle binary.
-Updater yt-dlp là thao tác thủ công và không nhập cookie. Chưa coi bản publish là
+Updater yt-dlp và FFmpeg đều là thao tác thủ công và không nhập cookie. Chưa coi bản publish là
 gói phát hành rộng cho đến khi hoàn tất giấy phép, signature/attestation, ký mã và
 smoke test Windows sạch.

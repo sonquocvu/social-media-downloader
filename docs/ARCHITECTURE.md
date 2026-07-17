@@ -42,9 +42,10 @@ SVVideoDownloader.Core <--- SVVideoDownloader.Infrastructure
 - FFmpeg/ffprobe được kiểm tra bằng `-version`; thư mục chứa hai binary được
   truyền cho yt-dlp bằng `--ffmpeg-location`.
 - Sở hữu persistence JSON dưới `LocalApplicationData`, lịch sử giới hạn 500 mục,
-  logger xoay vòng/redaction, kiểm tra trạng thái công cụ và cập nhật yt-dlp thủ công.
-- Updater tải artifact/checksum qua HTTPS vào tệp tạm, kiểm tra SHA-256 và
-  `--version`, sau đó dùng thay thế nguyên tử cùng backup/rollback.
+  logger xoay vòng/redaction, kiểm tra trạng thái công cụ và các updater thủ công.
+- Updater tải artifact/checksum qua HTTPS vào tệp tạm, kiểm tra SHA-256 và phiên
+  bản executable, sau đó dùng thay thế nguyên tử cùng backup/rollback. FFmpeg và
+  ffprobe được xử lý như một cặp từ cùng gói.
 - Không có binary nào được tải hoặc đóng gói trong kho mã.
 
 ### `SVVideoDownloader.App`
@@ -102,7 +103,7 @@ nằm trong thư mục đích trước khi App cho phép mở tệp.
   settings.json       cấu hình UI không chứa credential
   history.json        metadata tác vụ hoàn tất
   logs\               log xoay vòng đã redaction
-  tools\              yt-dlp.exe, ffmpeg.exe, ffprobe.exe do người dùng quản lý
+  tools\              yt-dlp.exe, ffmpeg.exe, ffprobe.exe do người dùng/updater quản lý
 ```
 
 Xóa queue/history chỉ thay đổi collection hoặc `history.json`; không có đường gọi
@@ -133,7 +134,9 @@ Các nguyên tắc sau đã được áp dụng tại process boundary:
 Các yêu cầu còn mở: xác minh kiến trúc/checksum/chữ ký từ nguồn được phê duyệt,
 và quản lý thư mục tạm riêng theo tác vụ với quy tắc dọn dẹp an toàn.
 
-## 5. Cập nhật yt-dlp thủ công
+## 5. Cập nhật công cụ thủ công
+
+### yt-dlp
 
 - Không có timer, background checker hay silent update. Chỉ nút người dùng mới gọi updater.
 - Nguồn cố định là bản phát hành ổn định `yt-dlp/yt-dlp`: `yt-dlp.exe` và
@@ -148,6 +151,24 @@ và quản lý thư mục tạm riêng theo tác vụ với quy tắc dọn dẹ
 - Chưa xác minh chữ ký GPG `SHA2-256SUMS.sig`. Checksum và artifact cùng trust
   boundary GitHub/TLS nên đây vẫn là hạn chế trước phân phối rộng.
 
+### FFmpeg và ffprobe
+
+- Không có timer, background checker hay silent update. Người dùng phải đọc thông
+  tin nguồn/GPLv3, đánh dấu xác nhận và bấm nút trước mỗi lần cập nhật.
+- [FFmpeg chỉ phát hành source và liên kết gyan.dev cho Windows](https://ffmpeg.org/download.html).
+  Updater private-use dùng `ffmpeg-release-essentials.zip` và sidecar `.sha256`
+  qua HTTPS từ [gyan.dev](https://www.gyan.dev/ffmpeg/builds/).
+- Gói được chọn là release mới nhất, Windows x64, static, GPLv3 và chứa cả
+  `ffmpeg.exe` lẫn `ffprobe.exe`. Gói không được commit hoặc bundle vào publish.
+- Giới hạn tải là 256 MiB cho ZIP và 64 KiB cho checksum. Chỉ đúng một entry
+  `*/bin/ffmpeg.exe` và một entry `*/bin/ffprobe.exe` được trích xuất; mỗi tệp
+  giải nén tối đa 300 MiB. Không extract cây thư mục hoặc tin tên đường dẫn từ ZIP.
+- Cả hai candidate phải chạy `-version` thành công trước khi thay đổi tệp đích.
+  Hai replacement dùng backup riêng; lỗi ở tệp thứ hai hoặc hậu kiểm sẽ rollback
+  cả cặp. Backup chỉ được giữ khi rollback không thể hoàn tất.
+- Sidecar checksum và ZIP do cùng host cung cấp, chưa có chữ ký/attestation độc
+  lập; do đó HTTPS + SHA-256 chỉ phát hiện hỏng/tamper ngoài trust boundary đó.
+
 ## 6. Phụ thuộc bên thứ ba và giấy phép
 
 Ngày rà soát ban đầu: 2026-07-17. Đây không phải tư vấn pháp lý. Giấy phép phải được xác minh lại theo đúng phiên bản và artifact trước khi phân phối.
@@ -157,13 +178,16 @@ Ngày rà soát ban đầu: 2026-07-17. Đây không phải tư vấn pháp lý.
 | [.NET 10 / WPF](https://github.com/dotnet/runtime) | Nền tảng ứng dụng | Dùng để build/chạy | Kiểm tra thông báo giấy phép của runtime và hình thức self-contained/framework-dependent khi đóng gói. |
 | [Microsoft.Extensions.DependencyInjection 10.0.8](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection/10.0.8) | Composition root của App | Package runtime | Giấy phép MIT; khóa phiên bản trong project và đưa vào SBOM/third-party notices của gói phát hành. |
 | [yt-dlp](https://github.com/yt-dlp/yt-dlp#license) | Trích xuất metadata và tải nguồn công khai | Không bundle; người dùng có thể kích hoạt cập nhật thủ công | Mã nguồn chính dùng Unlicense, nhưng binary PyInstaller chính thức chứa thành phần khác và được phân phối theo GPLv3+; phải giữ thông báo/nguồn tương ứng nếu phân phối lại. Không suy ra rằng mọi artifact đều chỉ có Unlicense. |
-| [FFmpeg/ffprobe](https://ffmpeg.org/legal.html) | Kiểm tra, ghép và chuyển đổi media | Probe/tích hợp qua yt-dlp đã có; chưa tải/bundle binary | FFmpeg mặc định là LGPL 2.1+; cấu hình có thành phần GPL làm GPL áp dụng cho toàn bộ build. Phải lưu cấu hình build, nguồn, phiên bản và giấy phép của binary đã chọn. Codec có thể kéo theo cân nhắc bằng sáng chế tùy nơi phân phối. |
+| [FFmpeg/ffprobe](https://ffmpeg.org/legal.html) | Kiểm tra, ghép và chuyển đổi media | Updater private-use tải thủ công gói Release Essentials x64 từ gyan.dev; không bundle | Gyan công bố mọi build của họ là GPLv3; gói thực tế gồm nhiều thư viện/codec. Cần giữ nguồn, phiên bản, checksum và cấu hình build nếu phân phối lại; codec có thể kéo theo cân nhắc bằng sáng chế tùy nơi phân phối. |
 | [xUnit.net](https://xunit.net/) | Kiểm thử | Package phát triển | Apache License 2.0. Không phân phối trong sản phẩm runtime. |
 | `Microsoft.NET.Test.Sdk`, `coverlet.collector`, runner xUnit | Chạy/đo kiểm thử | Package phát triển | Khóa phiên bản trong project; xác minh giấy phép và security advisory khi nâng cấp. Không phân phối trong sản phẩm runtime. |
 
 README chính thức của yt-dlp hiện cũng nêu JavaScript runtime/engine và `yt-dlp-ejs` là cần thiết cho hỗ trợ YouTube đầy đủ. Chưa dependency nào trong nhóm này được chấp thuận hoặc tải; đây là quyết định kiến trúc và giấy phép còn mở.
 
-Trước khi thêm binary, cần lập hồ sơ gồm tên artifact, URL nguồn chính thức, phiên bản cố định, SHA-256/chữ ký, kiến trúc, giấy phép, third-party notices, cấu hình build và quyết định có phân phối lại hay yêu cầu người dùng tự cung cấp.
+Quyết định private-use cho FFmpeg ghi nhận artifact URL ổn định trỏ đến release
+mới nhất, SHA-256 sidecar, x64/static/GPLv3 và không phân phối lại. Trước khi
+bundle hoặc phát hành rộng vẫn cần snapshot phiên bản cố định, checksum/chữ ký,
+third-party notices, cấu hình build, source tương ứng và rà soát nghĩa vụ GPLv3.
 
 ## 7. Quản lý cấu hình và dữ liệu
 
@@ -191,8 +215,8 @@ log, history, settings hay media.
 - ADR tạm thời 003: công cụ media chạy ngoài tiến trình, chưa bundle.
 - ADR tạm thời 004: giao diện hoàn toàn bằng tiếng Việt; định danh mã nguồn có thể bằng tiếng Anh.
 - ADR tạm thời 005: dữ liệu riêng nằm trong LocalApplicationData; không telemetry.
-- ADR tạm thời 006: chỉ cập nhật yt-dlp thủ công, có checksum và rollback; FFmpeg
-  vẫn được cung cấp thủ công.
+- ADR tạm thời 006: yt-dlp và gói FFmpeg/ffprobe chỉ được cập nhật khi người dùng
+  yêu cầu, có checksum và rollback; FFmpeg cần xác nhận nguồn/GPLv3 trước mỗi lần.
 - ADR tạm thời 007: dùng bảng màu WPF nội bộ và `DynamicResource`, không thêm UI framework
   bên thứ ba; lựa chọn sáng/tối được nhớ trong LocalApplicationData.
 
@@ -212,10 +236,10 @@ Các ADR trên cần tách thành tài liệu riêng nếu phạm vi hoặc nhó
 - Binary FFmpeg khác nhau có tập codec và giấy phép khác nhau.
 - Xử lý hủy process và tệp tạm sai có thể để lại process/tệp hoặc xóa nhầm dữ liệu.
 - URL và metadata có thể chứa dữ liệu nhạy cảm; thiết kế log cần được threat-model trước.
-- Kiểm tra `--version` chỉ xác nhận hình dạng/danh tính cơ bản. Updater yt-dlp có
-  SHA-256; FFmpeg/ffprobe thiết lập thủ công vẫn cần quy trình checksum/chữ ký ngoài ứng dụng.
-- Updater kiểm tra SHA-256 nhưng chưa kiểm tra chữ ký GPG của checksum hoặc GitHub
-  release attestation.
+- Kiểm tra `--version`/`-version` chỉ xác nhận hình dạng/danh tính cơ bản, không
+  chứng minh nguồn gốc hay an toàn của executable.
+- Hai updater kiểm tra SHA-256 nhưng chưa kiểm tra chữ ký GPG hoặc release
+  attestation; checksum và artifact FFmpeg hiện nằm cùng trust boundary gyan.dev/TLS.
 - Logger dùng redaction theo mẫu; chuỗi secret có định dạng mới vẫn có thể lọt qua.
 - Self-contained single-file và updater cần smoke test trên Windows sạch, Defender,
   SmartScreen và thư mục có chính sách bảo vệ thực tế.

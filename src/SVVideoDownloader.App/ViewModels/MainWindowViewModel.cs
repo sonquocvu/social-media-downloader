@@ -43,6 +43,8 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         "Dán liên kết video công khai từ YouTube, TikTok hoặc Facebook để bắt đầu.";
     private bool _isRefreshingTools;
     private bool _isUpdatingYtDlp;
+    private bool _isUpdatingFfmpeg;
+    private bool _ffmpegLicenseConfirmed;
     private bool _isDarkMode;
     private bool _isInitialized;
     private bool _disposed;
@@ -102,6 +104,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         ClearHistoryCommand = new AsyncRelayCommand(ClearHistoryAsync, () => CanClearHistory);
         RefreshToolsCommand = new AsyncRelayCommand(RefreshToolsAsync, () => CanRefreshTools);
         UpdateYtDlpCommand = new AsyncRelayCommand(UpdateYtDlpAsync, () => CanUpdateYtDlp);
+        UpdateFfmpegCommand = new AsyncRelayCommand(UpdateFfmpegAsync, () => CanUpdateFfmpeg);
         ToggleThemeCommand = new RelayCommand(ToggleTheme);
     }
 
@@ -211,13 +214,13 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     public bool HasAnalysisError => _analysisState == AnalysisState.Error;
 
     public bool CanAnalyze =>
-        !IsAnalyzing && !IsUpdatingYtDlp && !string.IsNullOrWhiteSpace(VideoUrl);
+        !IsAnalyzing && !IsToolUpdateActive && !string.IsNullOrWhiteSpace(VideoUrl);
 
     public bool CanDownload =>
         VideoInfo is not null &&
         SelectedQuality is not null &&
         RightsConfirmed &&
-        !IsUpdatingYtDlp &&
+        !IsToolUpdateActive &&
         !string.IsNullOrWhiteSpace(OutputFolder);
 
     public string FolderErrorMessage
@@ -299,6 +302,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         {
             if (SetProperty(ref _isUpdatingYtDlp, value))
             {
+                OnPropertyChanged(nameof(IsToolUpdateActive));
                 NotifyToolCommandsChanged();
                 AnalyzeCommand.NotifyCanExecuteChanged();
                 DownloadCommand.NotifyCanExecuteChanged();
@@ -306,10 +310,47 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         }
     }
 
-    public bool CanRefreshTools => !IsRefreshingTools && !IsUpdatingYtDlp;
+    public bool IsUpdatingFfmpeg
+    {
+        get => _isUpdatingFfmpeg;
+        private set
+        {
+            if (SetProperty(ref _isUpdatingFfmpeg, value))
+            {
+                OnPropertyChanged(nameof(IsToolUpdateActive));
+                NotifyToolCommandsChanged();
+                AnalyzeCommand.NotifyCanExecuteChanged();
+                DownloadCommand.NotifyCanExecuteChanged();
+            }
+        }
+    }
+
+    public bool IsToolUpdateActive => IsUpdatingYtDlp || IsUpdatingFfmpeg;
+
+    public bool FfmpegLicenseConfirmed
+    {
+        get => _ffmpegLicenseConfirmed;
+        set
+        {
+            if (SetProperty(ref _ffmpegLicenseConfirmed, value))
+            {
+                OnPropertyChanged(nameof(CanUpdateFfmpeg));
+                UpdateFfmpegCommand.NotifyCanExecuteChanged();
+            }
+        }
+    }
+
+    public bool CanRefreshTools => !IsRefreshingTools && !IsToolUpdateActive;
 
     public bool CanUpdateYtDlp =>
-        !IsUpdatingYtDlp &&
+        !IsToolUpdateActive &&
+        !IsRefreshingTools &&
+        !IsAnalyzing &&
+        !HasActiveDownloads;
+
+    public bool CanUpdateFfmpeg =>
+        FfmpegLicenseConfirmed &&
+        !IsToolUpdateActive &&
         !IsRefreshingTools &&
         !IsAnalyzing &&
         !HasActiveDownloads;
@@ -331,6 +372,8 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     public AsyncRelayCommand RefreshToolsCommand { get; }
 
     public AsyncRelayCommand UpdateYtDlpCommand { get; }
+
+    public AsyncRelayCommand UpdateFfmpegCommand { get; }
 
     public RelayCommand ToggleThemeCommand { get; }
 
@@ -708,6 +751,44 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         ToolsMessage = resultMessage;
     }
 
+    private async Task UpdateFfmpegAsync()
+    {
+        if (!CanUpdateFfmpeg)
+        {
+            return;
+        }
+
+        IsUpdatingFfmpeg = true;
+        ToolsMessage =
+            "Đang tải, kiểm tra SHA-256 và xác minh FFmpeg cùng ffprobe…";
+        string resultMessage;
+        try
+        {
+            var operation = await _toolManagementService.UpdateFfmpegAsync();
+            resultMessage = operation.WasBlocked
+                ? "Không thể cập nhật khi đang phân tích hoặc tải xuống."
+                : TranslateFfmpegUpdateResult(operation.UpdateResult!);
+        }
+        catch (OperationCanceledException)
+        {
+            resultMessage = "Đã hủy cập nhật FFmpeg trước khi thay thế công cụ.";
+        }
+        catch (Exception)
+        {
+            resultMessage =
+                "Cập nhật FFmpeg thất bại. Các công cụ hiện có được giữ nguyên nếu có thể.";
+            await LogSafelyAsync(DiagnosticLogLevel.Error, "Cập nhật FFmpeg phát sinh lỗi.");
+        }
+        finally
+        {
+            IsUpdatingFfmpeg = false;
+            FfmpegLicenseConfirmed = false;
+        }
+
+        await RefreshToolsAsync();
+        ToolsMessage = resultMessage;
+    }
+
     private void QueueSettingsSave()
     {
         if (_disposed || SelectedQuality is null)
@@ -785,8 +866,10 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     {
         OnPropertyChanged(nameof(CanRefreshTools));
         OnPropertyChanged(nameof(CanUpdateYtDlp));
+        OnPropertyChanged(nameof(CanUpdateFfmpeg));
         RefreshToolsCommand.NotifyCanExecuteChanged();
         UpdateYtDlpCommand.NotifyCanExecuteChanged();
+        UpdateFfmpegCommand.NotifyCanExecuteChanged();
     }
 
     private async Task LogSafelyAsync(DiagnosticLogLevel level, string message)
@@ -820,6 +903,30 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             "Khôi phục yt-dlp thất bại. Hãy xem nhật ký và thiết lập lại công cụ thủ công.",
         _ => "Cập nhật yt-dlp thất bại.",
     };
+
+    private static string TranslateFfmpegUpdateResult(FfmpegUpdateResult result) =>
+        result.Status switch
+        {
+            FfmpegUpdateStatus.Success =>
+                $"Đã cập nhật FFmpeg và ffprobe thành công lên phiên bản {result.FfmpegVersion}.",
+            FfmpegUpdateStatus.DownloadFailed =>
+                "Không thể tải gói FFmpeg Release Essentials.",
+            FfmpegUpdateStatus.ChecksumUnavailable =>
+                "Không tìm thấy checksum SHA-256 của gói FFmpeg; không thay đổi công cụ.",
+            FfmpegUpdateStatus.ChecksumMismatch =>
+                "Checksum gói FFmpeg không khớp; tệp tải về đã bị loại bỏ.",
+            FfmpegUpdateStatus.InvalidArchive =>
+                "Gói FFmpeg không hợp lệ hoặc không chứa đủ FFmpeg và ffprobe.",
+            FfmpegUpdateStatus.InvalidDownloadedExecutables =>
+                "FFmpeg hoặc ffprobe tải về không hợp lệ; không thay đổi công cụ.",
+            FfmpegUpdateStatus.ReplacementFailed =>
+                "Không thể thay thế FFmpeg và ffprobe. Hãy đóng chương trình đang dùng tệp và thử lại.",
+            FfmpegUpdateStatus.ValidationFailedAndRolledBack =>
+                "Bản FFmpeg mới không hoạt động; ứng dụng đã khôi phục cả hai công cụ cũ.",
+            FfmpegUpdateStatus.RollbackFailed =>
+                "Khôi phục FFmpeg thất bại. Hãy xem nhật ký và thiết lập lại công cụ thủ công.",
+            _ => "Cập nhật FFmpeg thất bại.",
+        };
 
     private static string TranslateValidation(IReadOnlyList<ValidationError> errors)
     {

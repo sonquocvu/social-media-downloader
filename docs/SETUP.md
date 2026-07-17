@@ -54,15 +54,25 @@ ngoài ứng dụng theo quy trình nội bộ rồi đặt tên là `yt-dlp.exe
 
 ## 4. Thiết lập FFmpeg và ffprobe
 
-Ứng dụng không tải hoặc cập nhật FFmpeg tự động.
+Cách thuận tiện cho sử dụng riêng:
 
-1. Chọn bản Windows x64 từ nguồn đã được tổ chức phê duyệt.
-2. Ghi lại phiên bản, URL nguồn, SHA-256/chữ ký, cấu hình build và giấy phép.
-3. Đặt `ffmpeg.exe` và `ffprobe.exe` cùng trong `%LOCALAPPDATA%\SVVideoDownloader\tools`.
-4. Mở tab “Công cụ và cài đặt” và bấm “Kiểm tra lại”.
+1. Đảm bảo không có tác vụ đang phân tích, tải hoặc cập nhật công cụ khác.
+2. Mở tab “Công cụ và cài đặt”.
+3. Đọc nguồn/gói và thông tin GPLv3, sau đó đánh dấu ô xác nhận.
+4. Bấm “Cài đặt / cập nhật FFmpeg”.
 
-Hai tệp phải cùng thư mục. Phiên bản FFmpeg có thể là LGPL hoặc GPL tùy cấu hình
-build; phải kiểm tra trước khi phân phối lại.
+Ứng dụng tải `ffmpeg-release-essentials.zip` Windows x64 và tệp SHA-256 từ
+[gyan.dev](https://www.gyan.dev/ffmpeg/builds/), nguồn bản dựng Windows được
+[trang tải chính thức của FFmpeg](https://ffmpeg.org/download.html) liên kết.
+Ứng dụng chỉ trích xuất `ffmpeg.exe` và `ffprobe.exe`, giới hạn kích thước, xác
+minh cả hai bằng `-version`, rồi thay thế theo cặp. Nếu một tệp bị khóa hoặc hậu
+kiểm thất bại, ứng dụng cố khôi phục cả hai bản cũ.
+
+Gói Release Essentials của gyan.dev là bản dựng static x64 GPLv3. Updater không
+bundle hay phân phối lại gói trong ứng dụng, không chạy ngầm và không kiểm tra
+chữ ký độc lập ngoài SHA-256 do cùng nguồn công bố. Nếu chính sách tổ chức yêu
+cầu nguồn khác, vẫn có thể đặt thủ công `ffmpeg.exe` và `ffprobe.exe` đã được
+phê duyệt vào `%LOCALAPPDATA%\SVVideoDownloader\tools`, rồi bấm “Kiểm tra lại”.
 
 ## 5. Cài đặt được nhớ
 
@@ -77,5 +87,5 @@ build; phải kiểm tra trước khi phân phối lại.
 - Chỉ tải nội dung do bạn sở hữu hoặc được phép tải.
 - Không thêm cookie, mật khẩu, token hoặc hồ sơ trình duyệt vào thư mục ứng dụng.
 - Không đổi cấu hình yt-dlp để đọc cookie/netrc ngoài ứng dụng.
-- Không đóng ứng dụng trong lúc cập nhật yt-dlp; giao diện sẽ chặn thao tác này.
+- Không đóng ứng dụng trong lúc cập nhật yt-dlp hoặc FFmpeg; giao diện sẽ chặn thao tác này.
 - Rà soát mục “Công cụ và cài đặt” sau mỗi thay đổi executable.

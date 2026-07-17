@@ -144,6 +144,12 @@ internal sealed class FakeToolManagementService : IToolManagementService
                 false,
                 new YtDlpUpdateResult(YtDlpUpdateStatus.Success, "2026.07.17")));
 
+    public Func<Task<FfmpegToolUpdateOperationResult>> FfmpegUpdateHandler { get; set; } = () =>
+        Task.FromResult(
+            new FfmpegToolUpdateOperationResult(
+                false,
+                new FfmpegUpdateResult(FfmpegUpdateStatus.Success, "8.1.2", "8.1.2")));
+
     public IReadOnlyList<ExternalToolStatus> Statuses { get; set; } =
     [
         new(ExternalToolKind.YtDlp, @"C:\Tools\yt-dlp.exe", true, "2026.07.17", null),
@@ -152,6 +158,8 @@ internal sealed class FakeToolManagementService : IToolManagementService
     ];
 
     public int UpdateCallCount { get; private set; }
+
+    public int FfmpegUpdateCallCount { get; private set; }
 
     public Task<IReadOnlyList<ExternalToolStatus>> CheckStatusAsync(
         CancellationToken cancellationToken = default) =>
@@ -162,6 +170,13 @@ internal sealed class FakeToolManagementService : IToolManagementService
     {
         UpdateCallCount++;
         return UpdateHandler();
+    }
+
+    public Task<FfmpegToolUpdateOperationResult> UpdateFfmpegAsync(
+        CancellationToken cancellationToken = default)
+    {
+        FfmpegUpdateCallCount++;
+        return FfmpegUpdateHandler();
     }
 }
 

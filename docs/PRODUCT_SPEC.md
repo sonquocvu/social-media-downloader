@@ -5,11 +5,11 @@
 SVVideoDownloader là ứng dụng desktop riêng tư bằng tiếng Việt cho Windows x64. Ứng dụng giúp người dùng tải video công khai do chính họ sở hữu hoặc được chủ sở hữu cho phép tải từ YouTube, TikTok và Facebook.
 
 Phiên bản hiện tại có giao diện WPF/MVVM đầu tiên và adapter tải thật. Luồng chỉ
-hoạt động khi nhà phát triển tự cung cấp các executable ngoài đã được rà soát;
-kho mã không tải hoặc phân phối các binary đó.
+hoạt động khi các executable ngoài đã được cài qua thao tác thủ công trong giao
+diện hoặc do người vận hành cung cấp; kho mã không chứa hay phân phối các binary đó.
 
 Bản private-use lưu tùy chọn và lịch sử cục bộ, không có telemetry, đồng thời cho
-phép người dùng chủ động cài/cập nhật yt-dlp từ bản phát hành ổn định chính thức.
+phép người dùng chủ động cài/cập nhật yt-dlp và gói FFmpeg/ffprobe đã chọn.
 
 ## 2. Người dùng mục tiêu
 
@@ -35,8 +35,8 @@ phép người dùng chủ động cài/cập nhật yt-dlp từ bản phát hà
 - Thu thập mật khẩu, token, cookie hoặc hồ sơ trình duyệt một cách tự động.
 - Tải nội dung riêng tư chỉ vì người dùng có URL.
 - Hỗ trợ nền tảng ngoài YouTube, TikTok và Facebook trong giai đoạn đầu.
-- Tự động tải ngầm hoặc đóng gói binary bên thứ ba; chỉ updater yt-dlp thủ công
-  có xác nhận của người dùng nằm trong phạm vi private-use.
+- Tự động tải ngầm hoặc đóng gói binary bên thứ ba; chỉ các updater thủ công có
+  xác nhận của người dùng nằm trong phạm vi private-use.
 
 ## 5. Luồng chính dự kiến
 
@@ -69,6 +69,9 @@ tệp trùng và phân phối binary vẫn phải được phê duyệt trước
   download/metadata; xác minh checksum/executable và rollback khi hậu kiểm thất bại.
 - FR-14: Cho phép chuyển giao diện sáng/tối tức thời và nhớ lựa chọn dưới
   LocalApplicationData mà không khởi động lại ứng dụng.
+- FR-15: Chỉ cài/cập nhật FFmpeg khi người dùng xác nhận nguồn và GPLv3; tải một
+  gói Windows x64 chứa cả `ffmpeg.exe` và `ffprobe.exe`, kiểm tra SHA-256, xác
+  minh cả hai executable và rollback theo cặp nếu thay thế/hậu kiểm thất bại.
 
 ## 7. Yêu cầu phi chức năng
 
@@ -101,8 +104,9 @@ tệp trùng và phân phối binary vẫn phải được phê duyệt trước
 
 ## 10. Quyết định chưa giải quyết
 
-- Phương thức phân phối FFmpeg/ffprobe vẫn là thiết lập thủ công; yt-dlp có updater thủ công.
-- Nguồn, phiên bản cố định, checksum và giấy phép chính xác của từng binary.
+- Updater private-use dùng gói `ffmpeg-release-essentials.zip` x64 mới nhất từ
+  gyan.dev, SHA-256 sidecar và GPLv3; chưa chấp thuận để bundle hoặc phân phối lại.
+- Chưa xác minh chữ ký độc lập/attestation cho binary FFmpeg ngoài SHA-256 cùng trust boundary.
 - Có cần JavaScript runtime và `yt-dlp-ejs` để duy trì hỗ trợ YouTube đầy đủ hay không.
 - Có cần xác minh GPG/release attestation ngoài SHA-256 cho updater yt-dlp hay không.
 - Định nghĩa chính xác về video Facebook/TikTok “công khai” và cách xử lý URL chuyển hướng.

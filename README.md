@@ -4,7 +4,8 @@ SVVideoDownloader là ứng dụng WPF riêng tư bằng tiếng Việt dành ch
 
 > Trạng thái hiện tại: đã sẵn sàng để thử nghiệm sử dụng riêng hằng ngày trên
 > Windows x64. Ứng dụng có cài đặt được nhớ, lịch sử tải, nhật ký chẩn đoán xoay
-> vòng, màn hình trạng thái công cụ và luồng cập nhật yt-dlp thủ công. Kho mã và
+> vòng, màn hình trạng thái công cụ và luồng cập nhật thủ công cho yt-dlp cùng
+> gói FFmpeg/ffprobe. Kho mã và
 > gói publish không chứa `yt-dlp`, FFmpeg, ffprobe hoặc media tải về.
 
 ## Nguyên tắc sử dụng
@@ -19,8 +20,8 @@ SVVideoDownloader là ứng dụng WPF riêng tư bằng tiếng Việt dành ch
 - Windows x64.
 - .NET 10 SDK có hỗ trợ WPF.
 - Công cụ dòng lệnh `dotnet`.
-- `yt-dlp.exe`, `ffmpeg.exe` và `ffprobe.exe` Windows x64 được thiết lập riêng
-  theo [hướng dẫn cài đặt](docs/SETUP.md).
+- `yt-dlp.exe`, `ffmpeg.exe` và `ffprobe.exe` Windows x64 được cài thủ công từ
+  màn hình công cụ hoặc thiết lập riêng theo [hướng dẫn cài đặt](docs/SETUP.md).
 
 ## Bắt đầu
 
@@ -55,6 +56,8 @@ cần cài .NET runtime riêng. Xem [thiết lập Windows](docs/SETUP.md) và
 - Lưu tối đa 500 tác vụ hoàn tất; xóa lịch sử không xóa media.
 - Kiểm tra trạng thái/phiên bản yt-dlp, FFmpeg và ffprobe.
 - Cập nhật yt-dlp chỉ khi người dùng yêu cầu, với SHA-256, thay thế nguyên tử và rollback.
+- Cài/cập nhật FFmpeg và ffprobe cùng nhau từ gói Release Essentials x64 của
+  gyan.dev sau khi người dùng xác nhận nguồn/GPLv3; có SHA-256 và rollback theo cặp.
 
 Nhận diện host chỉ xác nhận hình dạng liên kết và nền tảng được hỗ trợ; không bảo
 đảm nội dung tồn tại, công khai, tải được hoặc người dùng có quyền tải. MVP luôn
@@ -79,7 +82,7 @@ Xem [đặc tả sản phẩm](docs/PRODUCT_SPEC.md), [kiến trúc](docs/ARCHIT
 - `settings.json`: thư mục tải, chất lượng mặc định và giao diện sáng/tối.
 - `history.json`: lịch sử tác vụ hoàn tất, không chứa cookie.
 - `logs`: nhật ký chẩn đoán xoay vòng, có che cookie/secret/token/URL.
-- `tools`: executable ngoài do người dùng thiết lập hoặc yt-dlp được cập nhật thủ công.
+- `tools`: executable ngoài do người dùng thiết lập hoặc cập nhật thủ công trong ứng dụng.
 
 Không có telemetry. Ứng dụng không tự nhập cookie trình duyệt, không cập nhật
 ngầm và không xóa media khi xóa hàng đợi hoặc lịch sử.

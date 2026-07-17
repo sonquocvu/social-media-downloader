@@ -17,10 +17,11 @@ Không thêm thư mục công cụ vào kho mã hoặc thư mục publish nguồ
   trực tiếp chỉ trong phiên chẩn đoán do người vận hành kiểm soát.
 - Không thay đường dẫn bằng `cmd.exe`, PowerShell, script hoặc shortcut.
 
-## Nút cập nhật yt-dlp bị vô hiệu hóa
+## Nút cập nhật công cụ bị vô hiệu hóa
 
 Ứng dụng chặn cập nhật khi đang phân tích metadata, tải/ghép media, kiểm tra công
-cụ hoặc khi một cập nhật khác đang chạy. Hủy hoặc đợi tác vụ kết thúc rồi thử lại.
+cụ hoặc khi một cập nhật khác đang chạy. Nút FFmpeg còn yêu cầu đánh dấu ô xác
+nhận nguồn và GPLv3 trước mỗi lần cập nhật. Hủy hoặc đợi tác vụ kết thúc rồi thử lại.
 
 ## Checksum không khớp
 
@@ -34,10 +35,12 @@ báo rollback thất bại:
 
 1. Đóng mọi tác vụ tải và ứng dụng khác đang dùng yt-dlp.
 2. Sao lưu nhật ký chẩn đoán sau khi rà soát dữ liệu riêng tư.
-3. Xóa/đổi tên tệp yt-dlp hỏng trong thư mục `tools`.
+3. Xóa/đổi tên tệp yt-dlp, FFmpeg hoặc ffprobe hỏng trong thư mục `tools`.
 4. Cài lại bản đã xác minh theo quy trình thủ công.
 
-Các tệp `.yt-dlp.*.backup` chỉ được giữ lại khi rollback không thể hoàn tất.
+Các tệp `.yt-dlp.*.backup`, `.ffmpeg.*.backup` hoặc `.ffprobe.*.backup` chỉ được
+giữ lại khi rollback không thể hoàn tất. Không xóa backup trước khi xác định tệp
+công cụ nào đã được khôi phục.
 
 ## Không lưu được cài đặt hoặc lịch sử
 

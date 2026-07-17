@@ -19,6 +19,7 @@ public sealed class MainWindowViewModelTests
         Assert.False(viewModel.HasActiveDownloads);
         Assert.False(viewModel.AnalyzeCommand.CanExecute(null));
         Assert.False(viewModel.DownloadCommand.CanExecute(null));
+        Assert.False(viewModel.UpdateFfmpegCommand.CanExecute(null));
         Assert.Equal("Tốt nhất", viewModel.SelectedQuality?.DisplayName);
     }
 
@@ -289,7 +290,9 @@ public sealed class MainWindowViewModelTests
 
         Assert.True(viewModel.HasActiveDownloads);
         Assert.False(viewModel.UpdateYtDlpCommand.CanExecute(null));
+        Assert.False(viewModel.UpdateFfmpegCommand.CanExecute(null));
         Assert.Equal(0, tools.UpdateCallCount);
+        Assert.Equal(0, tools.FfmpegUpdateCallCount);
 
         completion.SetResult(TestData.SuccessfulDownload());
         await Assert.Single(viewModel.DownloadQueue).StartAsync();
@@ -306,6 +309,25 @@ public sealed class MainWindowViewModelTests
 
         Assert.Equal(1, tools.UpdateCallCount);
         Assert.Contains("2026.07.17", viewModel.ToolsMessage);
+    }
+
+    [Fact]
+    public async Task ManualFfmpegUpdateRequiresConfirmationAndRefreshesBothTools()
+    {
+        var tools = new FakeToolManagementService();
+        using var viewModel = TestData.CreateMainViewModel(tools: tools);
+        await viewModel.InitializeAsync();
+
+        Assert.False(viewModel.UpdateFfmpegCommand.CanExecute(null));
+        viewModel.FfmpegLicenseConfirmed = true;
+        Assert.True(viewModel.UpdateFfmpegCommand.CanExecute(null));
+
+        await viewModel.UpdateFfmpegCommand.ExecuteAsync();
+
+        Assert.Equal(1, tools.FfmpegUpdateCallCount);
+        Assert.Contains("8.1.2", viewModel.ToolsMessage);
+        Assert.False(viewModel.FfmpegLicenseConfirmed);
+        Assert.False(viewModel.UpdateFfmpegCommand.CanExecute(null));
     }
 
     private static async Task<MainWindowViewModel> CreateAnalyzedViewModelAsync(

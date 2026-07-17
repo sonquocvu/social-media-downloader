@@ -5,7 +5,8 @@ namespace SVVideoDownloader.App.Services;
 
 public sealed class ToolManagementService(
     IExternalToolStatusService statusService,
-    IYtDlpUpdateService updateService,
+    IYtDlpUpdateService ytDlpUpdateService,
+    IFfmpegUpdateService ffmpegUpdateService,
     IEngineOperationGate operationGate) : IToolManagementService
 {
     public Task<IReadOnlyList<ExternalToolStatus>> CheckStatusAsync(
@@ -21,7 +22,20 @@ public sealed class ToolManagementService(
             return new ToolUpdateOperationResult(true, null);
         }
 
-        var result = await updateService.UpdateAsync(cancellationToken);
+        var result = await ytDlpUpdateService.UpdateAsync(cancellationToken);
         return new ToolUpdateOperationResult(false, result);
+    }
+
+    public async Task<FfmpegToolUpdateOperationResult> UpdateFfmpegAsync(
+        CancellationToken cancellationToken = default)
+    {
+        using var updateLease = operationGate.TryEnterUpdate();
+        if (updateLease is null)
+        {
+            return new FfmpegToolUpdateOperationResult(true, null);
+        }
+
+        var result = await ffmpegUpdateService.UpdateAsync(cancellationToken);
+        return new FfmpegToolUpdateOperationResult(false, result);
     }
 }

@@ -44,6 +44,26 @@ public sealed class ExternalToolStatusService(
             expectedPrefix: null,
             cancellationToken);
 
+    public Task<ExternalToolStatus> CheckFfmpegAsync(
+        string executablePath,
+        CancellationToken cancellationToken = default) =>
+        CheckAsync(
+            ExternalToolKind.Ffmpeg,
+            executablePath,
+            "-version",
+            "ffmpeg version ",
+            cancellationToken);
+
+    public Task<ExternalToolStatus> CheckFfprobeAsync(
+        string executablePath,
+        CancellationToken cancellationToken = default) =>
+        CheckAsync(
+            ExternalToolKind.Ffprobe,
+            executablePath,
+            "-version",
+            "ffprobe version ",
+            cancellationToken);
+
     private async Task<ExternalToolStatus> CheckAsync(
         ExternalToolKind tool,
         string executablePath,

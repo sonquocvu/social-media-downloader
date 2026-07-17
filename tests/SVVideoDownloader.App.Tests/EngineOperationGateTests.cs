@@ -30,16 +30,21 @@ public sealed class EngineOperationGateTests
     {
         var gate = new EngineOperationGate();
         var updater = new RecordingUpdater();
+        var ffmpegUpdater = new RecordingFfmpegUpdater();
         var service = new ToolManagementService(
             new EmptyStatusService(),
             updater,
+            ffmpegUpdater,
             gate);
         using var download = gate.TryEnterDownload();
 
         var result = await service.UpdateYtDlpAsync();
+        var ffmpegResult = await service.UpdateFfmpegAsync();
 
         Assert.True(result.WasBlocked);
+        Assert.True(ffmpegResult.WasBlocked);
         Assert.Equal(0, updater.CallCount);
+        Assert.Equal(0, ffmpegUpdater.CallCount);
     }
 
     private sealed class RecordingUpdater : IYtDlpUpdateService
@@ -55,6 +60,19 @@ public sealed class EngineOperationGateTests
         }
     }
 
+    private sealed class RecordingFfmpegUpdater : IFfmpegUpdateService
+    {
+        public int CallCount { get; private set; }
+
+        public Task<FfmpegUpdateResult> UpdateAsync(
+            CancellationToken cancellationToken = default)
+        {
+            CallCount++;
+            return Task.FromResult(
+                new FfmpegUpdateResult(FfmpegUpdateStatus.Success, "8.1.2", "8.1.2"));
+        }
+    }
+
     private sealed class EmptyStatusService : IExternalToolStatusService
     {
         public Task<IReadOnlyList<ExternalToolStatus>> CheckAllAsync(
@@ -62,6 +80,16 @@ public sealed class EngineOperationGateTests
             Task.FromResult<IReadOnlyList<ExternalToolStatus>>([]);
 
         public Task<ExternalToolStatus> CheckYtDlpAsync(
+            string executablePath,
+            CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
+
+        public Task<ExternalToolStatus> CheckFfmpegAsync(
+            string executablePath,
+            CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
+
+        public Task<ExternalToolStatus> CheckFfprobeAsync(
             string executablePath,
             CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();

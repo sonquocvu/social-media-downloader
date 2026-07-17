@@ -12,7 +12,7 @@ namespace SVVideoDownloader.App.Tests;
 public sealed class MainWindowXamlTests
 {
     [Fact]
-    public void OutputFolderBinding_IsOneWayForReadOnlyViewModelProperty()
+    public void ReadOnlyViewModelBindings_AreOneWay()
     {
         Exception? exception = null;
         var thread = new Thread(() =>
@@ -26,14 +26,35 @@ public sealed class MainWindowXamlTests
                 var textBox = Assert.IsType<TextBox>(window.FindName("OutputFolderInput"));
                 var binding = BindingOperations.GetBinding(textBox, TextBox.TextProperty);
                 var themeButton = Assert.IsType<Button>(window.FindName("ThemeToggleButton"));
+                var applicationLogo = Assert.IsType<Image>(window.FindName("ApplicationLogo"));
                 var themeBinding = BindingOperations.GetBinding(
                     themeButton,
                     Button.CommandProperty);
+                var downloadQueue = Assert.IsType<ListBox>(window.FindName("DownloadQueueList"));
+                var queueItem = Assert.IsAssignableFrom<FrameworkElement>(
+                    downloadQueue.ItemTemplate.LoadContent());
+                var progressBar = Assert.Single(FindDescendants<ProgressBar>(queueItem));
+                var progressValueBinding = BindingOperations.GetBinding(
+                    progressBar,
+                    ProgressBar.ValueProperty);
+                var indeterminateBinding = BindingOperations.GetBinding(
+                    progressBar,
+                    ProgressBar.IsIndeterminateProperty);
 
                 Assert.NotNull(binding);
                 Assert.Equal(BindingMode.OneWay, binding.Mode);
                 Assert.NotNull(themeBinding);
                 Assert.Equal("ToggleThemeCommand", themeBinding.Path.Path);
+                Assert.EndsWith(
+                    "Assets/SVVideoDownloader.png",
+                    applicationLogo.Source.ToString(),
+                    StringComparison.Ordinal);
+                Assert.NotNull(progressValueBinding);
+                Assert.Equal("PercentageValue", progressValueBinding.Path.Path);
+                Assert.Equal(BindingMode.OneWay, progressValueBinding.Mode);
+                Assert.NotNull(indeterminateBinding);
+                Assert.Equal("IsProgressIndeterminate", indeterminateBinding.Path.Path);
+                Assert.Equal(BindingMode.OneWay, indeterminateBinding.Mode);
 
                 var themeService = new WpfThemeService(application);
                 themeService.Apply(ApplicationTheme.Dark);
@@ -52,5 +73,23 @@ public sealed class MainWindowXamlTests
         thread.Join();
 
         Assert.Null(exception);
+    }
+
+    private static IEnumerable<T> FindDescendants<T>(DependencyObject root)
+        where T : DependencyObject
+    {
+        for (var index = 0; index < VisualTreeHelper.GetChildrenCount(root); index++)
+        {
+            var child = VisualTreeHelper.GetChild(root, index);
+            if (child is T match)
+            {
+                yield return match;
+            }
+
+            foreach (var descendant in FindDescendants<T>(child))
+            {
+                yield return descendant;
+            }
+        }
     }
 }

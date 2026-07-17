@@ -34,11 +34,11 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (ViewModel.IsUpdatingYtDlp)
+        if (ViewModel.IsToolUpdateActive)
         {
             MessageBox.Show(
                 this,
-                "Đang cập nhật yt-dlp. Hãy đợi cập nhật hoàn tất rồi đóng ứng dụng.",
+                "Đang cập nhật công cụ media. Hãy đợi cập nhật hoàn tất rồi đóng ứng dụng.",
                 "Chưa thể thoát",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);

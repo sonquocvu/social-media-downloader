@@ -9,4 +9,7 @@ public interface IToolManagementService
 
     Task<ToolUpdateOperationResult> UpdateYtDlpAsync(
         CancellationToken cancellationToken = default);
+
+    Task<FfmpegToolUpdateOperationResult> UpdateFfmpegAsync(
+        CancellationToken cancellationToken = default);
 }
