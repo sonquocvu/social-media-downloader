@@ -48,7 +48,12 @@ SVVideoDownloader.Core <--- SVVideoDownloader.Infrastructure
 - Target `net10.0-windows`, WPF, RID `win-x64`, `PlatformTarget` x64.
 - Là composition root, chứa View, ViewModel và adapter dành riêng cho giao diện.
 - Code-behind chỉ làm nhiệm vụ giao diện/vòng đời; trạng thái và lệnh nằm trong ViewModel.
-- Hiện chỉ có màn hình khởi đầu và lệnh thông báo chưa triển khai.
+- Dùng `Microsoft.Extensions.DependencyInjection` để nối ViewModel với cổng Core
+  và implementation Infrastructure.
+- Có màn hình phân tích, tùy chọn tải và hàng đợi. Thao tác filesystem/process từ
+  ViewModel đi qua dịch vụ bất đồng bộ; hộp thoại xác nhận đóng cửa sổ vẫn là view concern.
+- `DownloadCoordinator` tạo cấu hình Infrastructure theo thư mục đích của từng tác
+  vụ mà không đưa khái niệm filesystem vào Core.
 
 ### Kiểm thử
 
@@ -56,7 +61,10 @@ SVVideoDownloader.Core <--- SVVideoDownloader.Infrastructure
 - `SVVideoDownloader.Infrastructure.Tests` dùng process runner giả, không dùng
   Internet hoặc executable thật; kiểm tra argument, JSON metadata/progress,
   timeout, cancellation, nhận diện công cụ và che dữ liệu nhạy cảm.
-- Cả hai dùng xUnit và target `net10.0`.
+- `SVVideoDownloader.App.Tests` kiểm tra ViewModel phân tích, chọn thư mục, tải,
+  tiến độ, hủy, thử lại, xóa và mở kết quả bằng dịch vụ giả.
+- Các project dùng xUnit; kiểm thử App target `net10.0-windows`, các bộ còn lại
+  target `net10.0`.
 
 ## 3. Luồng tích hợp
 
@@ -70,7 +78,9 @@ View -> ViewModel -> dịch vụ ứng dụng/Core
 
 Không đưa kiểu `Process`, đường dẫn tệp hoặc đối số `yt-dlp` vào Core.
 Infrastructure chuyển JSON công cụ ngoài thành mô hình Core trước khi trả về App.
-App chưa gọi các dịch vụ này nên chưa có luồng tải end-to-end trong giao diện.
+App gọi các dịch vụ qua dependency injection. `yt-dlp` trả metadata JSON, progress
+JSON và đường dẫn tệp cuối bằng template có tiền tố ổn định; đường dẫn cuối phải
+nằm trong thư mục đích trước khi App cho phép mở tệp.
 
 ## 4. Nguyên tắc an toàn cho process ngoài
 
@@ -101,6 +111,7 @@ Ngày rà soát ban đầu: 2026-07-17. Đây không phải tư vấn pháp lý.
 | Phụ thuộc | Vai trò | Tình trạng | Cân nhắc giấy phép/phân phối |
 |---|---|---|---|
 | [.NET 10 / WPF](https://github.com/dotnet/runtime) | Nền tảng ứng dụng | Dùng để build/chạy | Kiểm tra thông báo giấy phép của runtime và hình thức self-contained/framework-dependent khi đóng gói. |
+| [Microsoft.Extensions.DependencyInjection 10.0.8](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection/10.0.8) | Composition root của App | Package runtime | Giấy phép MIT; khóa phiên bản trong project và đưa vào SBOM/third-party notices của gói phát hành. |
 | [yt-dlp](https://github.com/yt-dlp/yt-dlp#license) | Trích xuất metadata và tải nguồn công khai | Adapter đã có; chưa tải/bundle binary | Mã nguồn chính dùng Unlicense, nhưng binary PyInstaller chính thức chứa thành phần khác và được phân phối theo GPLv3+; phải giữ thông báo/nguồn tương ứng nếu phân phối lại. Không suy ra rằng mọi artifact đều chỉ có Unlicense. |
 | [FFmpeg/ffprobe](https://ffmpeg.org/legal.html) | Kiểm tra, ghép và chuyển đổi media | Probe/tích hợp qua yt-dlp đã có; chưa tải/bundle binary | FFmpeg mặc định là LGPL 2.1+; cấu hình có thành phần GPL làm GPL áp dụng cho toàn bộ build. Phải lưu cấu hình build, nguồn, phiên bản và giấy phép của binary đã chọn. Codec có thể kéo theo cân nhắc bằng sáng chế tùy nơi phân phối. |
 | [xUnit.net](https://xunit.net/) | Kiểm thử | Package phát triển | Apache License 2.0. Không phân phối trong sản phẩm runtime. |
@@ -132,6 +143,10 @@ Các ADR trên cần tách thành tài liệu riêng nếu phạm vi hoặc nhó
 - Output/progress của `yt-dlp` thay đổi giữa các phiên bản; cần ưu tiên JSON/mẫu có version thay vì parse văn bản tự do.
 - Adapter hiện dựa vào `%(progress)j` và các field JSON của `--dump-single-json`;
   cần khóa phiên bản tương thích và có fixture khi chọn binary phát hành.
+- UI đã có accessibility/DPI cơ bản nhưng chưa được kiểm thử thủ công bằng screen
+  reader, high contrast và ma trận Windows/DPI đã phê duyệt.
+- Tên output hiện có thể trùng với tệp đã tồn tại; phải chốt chính sách tránh ghi
+  đè/đổi tên trước khi phân phối.
 - Nền tảng có thể thay đổi URL, điều khoản hoặc biện pháp chống tự động hóa mà không báo trước.
 - Hỗ trợ YouTube đầy đủ có thể làm tăng dependency và nghĩa vụ giấy phép do JavaScript runtime/`yt-dlp-ejs`.
 - Binary FFmpeg khác nhau có tập codec và giấy phép khác nhau.

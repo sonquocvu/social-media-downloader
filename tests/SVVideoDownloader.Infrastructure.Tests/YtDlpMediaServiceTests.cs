@@ -44,6 +44,7 @@ public sealed class YtDlpMediaServiceTests
         const string output = """
             [download] human-readable line that must be ignored
             SVVD_PROGRESS:{"downloaded_bytes":500,"total_bytes":1000,"speed":125}
+            SVVD_OUTPUT:"C:\\svvd-test\\downloads\\video của tôi.mp4"
             """;
         var runner = new FakeProcessRunner();
         runner.EnqueueResult(YtDlpVersion());
@@ -59,6 +60,7 @@ public sealed class YtDlpMediaServiceTests
             CancellationToken.None);
 
         Assert.True(result.IsSuccess);
+        Assert.Equal("video của tôi.mp4", result.Value!.OutputFileName);
         Assert.Equal(4, runner.Requests.Count);
         var item = Assert.Single(progress.Values);
         Assert.Equal(50d, item.Percentage);
@@ -102,6 +104,26 @@ public sealed class YtDlpMediaServiceTests
         Assert.False(result.IsSuccess);
         Assert.Equal(MediaErrorCategory.DependencyInaccessible, result.Error!.Category);
         Assert.Equal(MediaComponent.MediaProcessor, result.Error.Component);
+    }
+
+    [Fact]
+    public async Task DownloadRejectsSuccessWithoutStructuredOutputPath()
+    {
+        var runner = new FakeProcessRunner();
+        runner.EnqueueResult(YtDlpVersion());
+        runner.EnqueueResult(FfmpegVersion());
+        runner.EnqueueResult(FfprobeVersion());
+        runner.EnqueueResult(
+            new ProcessRunResult(0, "[download] finished", string.Empty));
+        var service = new YtDlpMediaService(TestData.CreateOptions(), runner);
+
+        var result = await service.DownloadAsync(
+            TestData.CreateRequest(),
+            cancellationToken: CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(MediaErrorCategory.InvalidResponse, result.Error!.Category);
+        Assert.Equal(MediaComponent.MetadataExtractor, result.Error.Component);
     }
 
     [Fact]

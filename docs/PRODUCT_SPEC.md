@@ -4,7 +4,9 @@
 
 SVVideoDownloader là ứng dụng desktop riêng tư bằng tiếng Việt cho Windows x64. Ứng dụng giúp người dùng tải video công khai do chính họ sở hữu hoặc được chủ sở hữu cho phép tải từ YouTube, TikTok và Facebook.
 
-Phiên bản hiện tại là khung khởi đầu. Không có luồng tải video thật.
+Phiên bản hiện tại có giao diện WPF/MVVM đầu tiên và adapter tải thật. Luồng chỉ
+hoạt động khi nhà phát triển tự cung cấp các executable ngoài đã được rà soát;
+kho mã không tải hoặc phân phối các binary đó.
 
 ## 2. Người dùng mục tiêu
 
@@ -42,7 +44,8 @@ Phiên bản hiện tại là khung khởi đầu. Không có luồng tải vide
 6. Ứng dụng tải, ghép/chuyển đổi khi cần và hiển thị tiến độ.
 7. Ứng dụng thông báo kết quả bằng tiếng Việt và cho phép mở thư mục chứa tệp.
 
-Các bước 3–7 chưa được triển khai.
+Các bước 3–7 đã có luồng MVP trong giao diện. Nội dung xác nhận quyền, chính sách
+tệp trùng và phân phối binary vẫn phải được phê duyệt trước khi phát hành.
 
 ## 6. Yêu cầu chức năng cho MVP
 
@@ -87,8 +90,8 @@ Các bước 3–7 chưa được triển khai.
 - Có cần JavaScript runtime và `yt-dlp-ejs` để duy trì hỗ trợ YouTube đầy đủ hay không.
 - Chính sách cập nhật và quay lui `yt-dlp`/FFmpeg.
 - Định nghĩa chính xác về video Facebook/TikTok “công khai” và cách xử lý URL chuyển hướng.
-- Thiết kế bước xác nhận quyền và nội dung tuyên bố pháp lý.
+- Phê duyệt cuối cùng cho nội dung xác nhận quyền và tuyên bố pháp lý MVP.
 - Định dạng mặc định, quy tắc đặt tên, xử lý trùng tệp và thư mục mặc định.
 - Chính sách giữ lịch sử, log, telemetry và báo lỗi.
-- Mức hỗ trợ accessibility, theme, DPI và phiên bản Windows tối thiểu.
+- Ma trận kiểm thử accessibility, high contrast, DPI và phiên bản Windows tối thiểu.
 - Hình thức phân phối ứng dụng và ký mã.

@@ -48,6 +48,8 @@ internal static class YtDlpCommandBuilder
             "--no-colors",
             "--progress-template",
             ProgressTemplate,
+            "--print",
+            "after_move:" + YtDlpOutputParser.LinePrefix + "%(filepath)j",
             "--ffmpeg-location",
             Path.GetDirectoryName(options.FfmpegPath)!,
             "--format",

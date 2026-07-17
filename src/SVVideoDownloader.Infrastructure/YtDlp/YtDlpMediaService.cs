@@ -16,6 +16,7 @@ public sealed class YtDlpMediaService : IVideoMetadataProvider, IVideoDownloadSe
     private readonly ExternalToolVerifier _toolVerifier;
     private readonly YtDlpMetadataParser _metadataParser = new();
     private readonly YtDlpProgressParser _progressParser = new();
+    private readonly YtDlpOutputParser _outputParser = new();
 
     public YtDlpMediaService(ExternalToolOptions options)
         : this(options, new SystemProcessRunner())
@@ -94,14 +95,14 @@ public sealed class YtDlpMediaService : IVideoMetadataProvider, IVideoDownloadSe
         }
     }
 
-    public async Task<MediaOperationResult> DownloadAsync(
+    public async Task<MediaOperationResult<DownloadResult>> DownloadAsync(
         DownloadRequest request,
         IProgress<DownloadProgress>? progress = null,
         CancellationToken cancellationToken = default)
     {
         if (request is null)
         {
-            return MediaOperationResult.Failure(
+            return MediaOperationResult<DownloadResult>.Failure(
                 new MediaOperationError(
                     MediaErrorCategory.InvalidRequest,
                     MediaComponent.Source));
@@ -110,23 +111,32 @@ public sealed class YtDlpMediaService : IVideoMetadataProvider, IVideoDownloadSe
         var toolError = await VerifyDownloadToolsAsync(cancellationToken).ConfigureAwait(false);
         if (toolError is not null)
         {
-            return MediaOperationResult.Failure(toolError);
+            return MediaOperationResult<DownloadResult>.Failure(toolError);
         }
 
         try
         {
+            DownloadResult? downloadResult = null;
             var processResult = await _processRunner
                 .RunAsync(
                     YtDlpCommandBuilder.BuildDownloadRequest(_options, request),
-                    line => ReportProgress(line, progress),
+                    line => HandleDownloadOutput(line, progress, ref downloadResult),
                     cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
 
-            return processResult.ExitCode == 0
-                ? MediaOperationResult.Success()
-                : MediaOperationResult.Failure(
+            if (processResult.ExitCode != 0)
+            {
+                return MediaOperationResult<DownloadResult>.Failure(
                     new MediaOperationError(
                         MediaErrorCategory.ExecutionFailed,
+                        MediaComponent.MetadataExtractor));
+            }
+
+            return downloadResult is not null
+                ? MediaOperationResult<DownloadResult>.Success(downloadResult)
+                : MediaOperationResult<DownloadResult>.Failure(
+                    new MediaOperationError(
+                        MediaErrorCategory.InvalidResponse,
                         MediaComponent.MetadataExtractor));
         }
         catch (OperationCanceledException)
@@ -135,19 +145,19 @@ public sealed class YtDlpMediaService : IVideoMetadataProvider, IVideoDownloadSe
         }
         catch (ExternalProcessTimeoutException)
         {
-            return MediaOperationResult.Failure(
+            return MediaOperationResult<DownloadResult>.Failure(
                 new MediaOperationError(
                     MediaErrorCategory.TimedOut,
                     MediaComponent.MetadataExtractor));
         }
         catch (ExternalProcessStartException exception)
         {
-            return MediaOperationResult.Failure(
+            return MediaOperationResult<DownloadResult>.Failure(
                 MapStartFailure(exception.Kind, MediaComponent.MetadataExtractor));
         }
         catch (Exception)
         {
-            return MediaOperationResult.Failure(
+            return MediaOperationResult<DownloadResult>.Failure(
                 new MediaOperationError(
                     MediaErrorCategory.ExecutionFailed,
                     MediaComponent.MetadataExtractor));
@@ -178,13 +188,21 @@ public sealed class YtDlpMediaService : IVideoMetadataProvider, IVideoDownloadSe
             .ConfigureAwait(false);
     }
 
-    private void ReportProgress(string line, IProgress<DownloadProgress>? progress)
+    private void HandleDownloadOutput(
+        string line,
+        IProgress<DownloadProgress>? progress,
+        ref DownloadResult? downloadResult)
     {
         if (progress is not null &&
             _progressParser.TryParse(line, out var parsedProgress) &&
             parsedProgress is not null)
         {
             progress.Report(parsedProgress);
+        }
+
+        if (_outputParser.TryParse(line, _options.OutputDirectory, out var parsedResult))
+        {
+            downloadResult = parsedResult;
         }
     }
 

@@ -12,13 +12,15 @@ public sealed record VideoInfo
         string title,
         string? author,
         TimeSpan? duration,
-        IReadOnlyList<VideoFormat> formats)
+        IReadOnlyList<VideoFormat> formats,
+        Uri? thumbnailUri)
     {
         Source = source;
         Title = title;
         Author = author;
         Duration = duration;
         Formats = formats;
+        ThumbnailUri = thumbnailUri;
     }
 
     public VideoSource Source { get; }
@@ -31,12 +33,15 @@ public sealed record VideoInfo
 
     public IReadOnlyList<VideoFormat> Formats { get; }
 
+    public Uri? ThumbnailUri { get; }
+
     public static ValidationResult<VideoInfo> Create(
         VideoSource? source,
         string? title,
         string? author,
         TimeSpan? duration,
-        IEnumerable<VideoFormat>? formats)
+        IEnumerable<VideoFormat>? formats,
+        Uri? thumbnailUri = null)
     {
         var errors = new List<ValidationError>();
         var formatArray = formats?.ToArray();
@@ -72,6 +77,7 @@ public sealed record VideoInfo
                 title!.Trim(),
                 string.IsNullOrWhiteSpace(author) ? null : author.Trim(),
                 duration,
-                Array.AsReadOnly(formatArray!)));
+                Array.AsReadOnly(formatArray!),
+                thumbnailUri));
     }
 }

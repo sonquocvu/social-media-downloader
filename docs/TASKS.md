@@ -20,6 +20,12 @@ Ngày cập nhật: 2026-07-17.
 - [x] Thêm kiểm thử URL, tên tệp, preset chất lượng và ma trận chuyển trạng thái.
 - [x] Thêm hợp đồng Core cho phân tích metadata và tải với lỗi runtime có cấu trúc.
 - [x] Thêm adapter yt-dlp/FFmpeg an toàn và kiểm thử hoàn toàn ngoại tuyến.
+- [x] Thêm giao diện WPF/MVVM đầu tiên cho phân tích, tùy chọn tải và hàng đợi.
+- [x] Nối App với Core/Infrastructure bằng dependency injection.
+- [x] Thêm trạng thái rỗng/đang tải/thành công/đã hủy/lỗi và khóa lệnh không hợp lệ.
+- [x] Thêm thao tác hủy, thử lại, xóa mục hoàn tất, mở tệp và mở thư mục.
+- [x] Thêm kiểm thử ViewModel dùng dịch vụ giả, không dùng mạng hay binary thật.
+- [x] Parse thumbnail và đường dẫn output có cấu trúc từ yt-dlp vào mô hình Core.
 
 ## P0 — quyết định trước khi triển khai tải
 
@@ -43,6 +49,8 @@ Ngày cập nhật: 2026-07-17.
 - [x] Tìm executable từ đường dẫn cấu hình và xác minh danh tính cơ bản bằng `--version`/`-version`.
 - [x] Tạo process runner an toàn bằng `ArgumentList`, timeout, hủy cây process và giới hạn output.
 - [x] Đọc metadata JSON/progress JSON có cấu trúc từ `yt-dlp`.
+- [x] Đọc đường dẫn tệp cuối bằng output template có tiền tố ổn định và kiểm tra
+      đường dẫn thuộc thư mục đích.
 - [x] Tích hợp ffprobe và FFmpeg qua kiểm tra toolchain và `--ffmpeg-location`.
 - [x] Không trả stderr; ánh xạ lỗi kỹ thuật sang category/component ổn định.
 - [ ] Quản lý thư mục tạm theo từng tác vụ và dọn dẹp có kiểm tra đường dẫn.
@@ -50,10 +58,14 @@ Ngày cập nhật: 2026-07-17.
 
 ## P1 — giao diện
 
-- [ ] Thiết kế luồng dán URL, xác nhận quyền, chọn định dạng/thư mục và tải.
-- [ ] Thêm validation, tiến độ, hủy và thông báo lỗi bằng tiếng Việt.
-- [ ] Thêm accessibility, keyboard navigation, DPI và theme.
-- [ ] Đảm bảo không hiển thị dữ liệu nhạy cảm ngoài ý muốn.
+- [x] Thiết kế luồng dán URL, xác nhận quyền, chọn chất lượng/thư mục và tải.
+- [x] Thêm validation, tiến độ, hủy, thử lại và thông báo lỗi bằng tiếng Việt.
+- [x] Thêm nhãn accessibility, access key, thứ tự bàn phím, cuộn và bố cục co giãn
+      cơ bản cho mức 125%/150%.
+- [x] Không đưa stderr, URL, cookie hoặc secret vào thông báo giao diện.
+- [ ] Kiểm thử thủ công với screen reader, high contrast và DPI 125%/150% trên
+      các phiên bản Windows tối thiểu sau khi quyết định phạm vi hỗ trợ.
+- [ ] Quyết định chính sách xử lý tệp trùng tên và ghi đè trước khi phát hành.
 
 ## P2 — phát hành và vận hành
 
@@ -66,9 +78,10 @@ Ngày cập nhật: 2026-07-17.
 ## Điều kiện chặn hiện tại
 
 - Chưa có quyết định pháp lý/phân phối cho binary ngoài.
-- Chưa có thiết kế xác nhận quyền của người dùng.
+- Nội dung xác nhận quyền hiện là bản MVP; chưa được duyệt pháp lý/sản phẩm.
 - Chưa quyết định dependency JavaScript cần cho hỗ trợ YouTube đầy đủ.
 
-Adapter Infrastructure đã được triển khai nhưng chưa được nối vào UI, chưa bundle
-binary và chưa sẵn sàng phân phối. Không bật luồng end-to-end cho người dùng cho
-đến khi các mục P0 liên quan được xử lý.
+Adapter Infrastructure đã được nối vào UI nhưng chưa bundle binary và chưa sẵn
+sàng phân phối. Luồng chỉ chạy khi nhà phát triển tự cung cấp công cụ trong thư
+mục `tools`; không phát hành cho người dùng cho đến khi các mục P0 liên quan được
+xử lý.

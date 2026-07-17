@@ -15,6 +15,7 @@ public sealed class YtDlpMetadataParserTests
               "title": "Video do tôi sở hữu",
               "uploader": "Tác giả",
               "duration": 62.5,
+              "thumbnail": "https://cdn.example.test/thumbnail.jpg",
               "formats": [
                 {
                   "format_id": "137",
@@ -52,6 +53,9 @@ public sealed class YtDlpMetadataParserTests
         Assert.Equal("Video do tôi sở hữu", info.Title);
         Assert.Equal("Tác giả", info.Author);
         Assert.Equal(TimeSpan.FromSeconds(62.5), info.Duration);
+        Assert.Equal(
+            new Uri("https://cdn.example.test/thumbnail.jpg"),
+            info.ThumbnailUri);
         Assert.Collection(
             info.Formats,
             video =>

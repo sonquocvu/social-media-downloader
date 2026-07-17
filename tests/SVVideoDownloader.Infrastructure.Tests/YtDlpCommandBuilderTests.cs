@@ -74,6 +74,8 @@ public sealed class YtDlpCommandBuilderTests
         Assert.Contains("--no-colors", arguments);
         Assert.Contains("--progress-template", arguments);
         Assert.Contains("download:SVVD_PROGRESS:%(progress)j", arguments);
+        Assert.Contains("--print", arguments);
+        Assert.Contains("after_move:SVVD_OUTPUT:%(filepath)j", arguments);
         Assert.Equal("--", arguments[^2]);
         Assert.Equal(url, arguments[^1]);
         Assert.Equal(1, arguments.Count(argument => argument == url));

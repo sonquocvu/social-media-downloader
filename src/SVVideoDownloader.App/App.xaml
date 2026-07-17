@@ -1,8 +1,23 @@
-﻿<Application x:Class="SVVideoDownloader.App.App"
+<Application x:Class="SVVideoDownloader.App.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:SVVideoDownloader.App">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Application.Resources>
-         
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+
+        <Style TargetType="Button">
+            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="Padding" Value="14,7" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="Padding" Value="9,6" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style TargetType="ComboBox">
+            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="Padding" Value="8,5" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
     </Application.Resources>
 </Application>

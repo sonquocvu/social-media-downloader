@@ -28,7 +28,14 @@ internal sealed class YtDlpMetadataParser
             var author = GetString(root, "uploader") ?? GetString(root, "channel");
             var duration = GetDuration(root);
             var formats = GetFormats(root);
-            var infoResult = VideoInfo.Create(source, title, author, duration, formats);
+            var thumbnailUri = GetHttpsUri(root, "thumbnail");
+            var infoResult = VideoInfo.Create(
+                source,
+                title,
+                author,
+                duration,
+                formats,
+                thumbnailUri);
 
             return infoResult.IsSuccess
                 ? MediaOperationResult<VideoInfo>.Success(infoResult.Value!)
@@ -115,6 +122,15 @@ internal sealed class YtDlpMetadataParser
         }
 
         return property.GetString();
+    }
+
+    private static Uri? GetHttpsUri(JsonElement element, string propertyName)
+    {
+        var value = GetString(element, propertyName);
+        return Uri.TryCreate(value, UriKind.Absolute, out var uri) &&
+            string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)
+            ? uri
+            : null;
     }
 
     private static int? GetNullableInt32(JsonElement element, string propertyName)
