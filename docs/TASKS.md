@@ -13,6 +13,11 @@ Ngày cập nhật: 2026-07-17.
 - [x] Thêm mô hình nhận diện URL HTTPS cho ba nền tảng và kiểm thử ban đầu.
 - [x] Ghi nhận tên executable ngoài mà không tải hoặc chạy binary.
 - [x] Ghi phạm vi an toàn, giả định, quyết định mở và cân nhắc giấy phép.
+- [x] Hoàn thiện domain Core cho nguồn video, metadata, định dạng, tùy chọn,
+      yêu cầu tải, tác vụ, tiến độ và trạng thái.
+- [x] Thêm lỗi validation có cấu trúc để tầng giao diện ánh xạ sang tiếng Việt.
+- [x] Thêm bộ làm sạch tên tệp Windows thuần chuỗi, không gọi filesystem.
+- [x] Thêm kiểm thử URL, tên tệp, preset chất lượng và ma trận chuyển trạng thái.
 
 ## P0 — quyết định trước khi triển khai tải
 
@@ -26,9 +31,9 @@ Ngày cập nhật: 2026-07-17.
 
 ## P1 — lõi nghiệp vụ
 
-- [ ] Định nghĩa yêu cầu tải, metadata, định dạng, tiến độ, kết quả và mã lỗi không phụ thuộc hạ tầng.
+- [x] Định nghĩa yêu cầu tải, metadata, định dạng, tiến độ, trạng thái và mã lỗi không phụ thuộc hạ tầng.
 - [ ] Định nghĩa hợp đồng truy vấn metadata và điều phối tác vụ.
-- [ ] Bổ sung quy tắc xác nhận quyền trước khi cho phép tải.
+- [x] Bổ sung quy tắc xác nhận quyền khi tạo yêu cầu tải.
 - [ ] Bổ sung kiểm thử URL chuyển hướng, IDN, URL rút gọn và dữ liệu biên.
 
 ## P1 — hạ tầng
