@@ -8,14 +8,24 @@ namespace SVVideoDownloader.App.Services;
 
 public sealed class DownloadCoordinator(
     ExternalToolOptions baseOptions,
-    IProcessRunner processRunner) : IDownloadCoordinator
+    IProcessRunner processRunner,
+    IEngineOperationGate operationGate) : IDownloadCoordinator
 {
-    public Task<MediaOperationResult<DownloadResult>> DownloadAsync(
+    public async Task<MediaOperationResult<DownloadResult>> DownloadAsync(
         DownloadRequest request,
         string outputFolder,
         IProgress<DownloadProgress>? progress = null,
         CancellationToken cancellationToken = default)
     {
+        using var operation = operationGate.TryEnterDownload();
+        if (operation is null)
+        {
+            return MediaOperationResult<DownloadResult>.Failure(
+                new MediaOperationError(
+                    MediaErrorCategory.ExecutionFailed,
+                    MediaComponent.MetadataExtractor));
+        }
+
         var options = new ExternalToolOptions(
             baseOptions.YtDlpPath,
             baseOptions.FfmpegPath,
@@ -24,6 +34,6 @@ public sealed class DownloadCoordinator(
             baseOptions.MetadataTimeout,
             baseOptions.DownloadTimeout);
         var service = new YtDlpMediaService(options, processRunner);
-        return service.DownloadAsync(request, progress, cancellationToken);
+        return await service.DownloadAsync(request, progress, cancellationToken);
     }
 }

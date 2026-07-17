@@ -41,6 +41,10 @@ SVVideoDownloader.Core <--- SVVideoDownloader.Infrastructure
   credential hoặc hành vi playlist. `--no-playlist` giữ phạm vi một video cho MVP.
 - FFmpeg/ffprobe được kiểm tra bằng `-version`; thư mục chứa hai binary được
   truyền cho yt-dlp bằng `--ffmpeg-location`.
+- Sở hữu persistence JSON dưới `LocalApplicationData`, lịch sử giới hạn 500 mục,
+  logger xoay vòng/redaction, kiểm tra trạng thái công cụ và cập nhật yt-dlp thủ công.
+- Updater tải artifact/checksum qua HTTPS vào tệp tạm, kiểm tra SHA-256 và
+  `--version`, sau đó dùng thay thế nguyên tử cùng backup/rollback.
 - Không có binary nào được tải hoặc đóng gói trong kho mã.
 
 ### `SVVideoDownloader.App`
@@ -54,6 +58,11 @@ SVVideoDownloader.Core <--- SVVideoDownloader.Infrastructure
   ViewModel đi qua dịch vụ bất đồng bộ; hộp thoại xác nhận đóng cửa sổ vẫn là view concern.
 - `DownloadCoordinator` tạo cấu hình Infrastructure theo thư mục đích của từng tác
   vụ mà không đưa khái niệm filesystem vào Core.
+- `EngineOperationGate` loại trừ cập nhật engine với metadata/download; updater
+  không thể bắt đầu khi còn thao tác công cụ, và download mới không thể bắt đầu
+  trong lúc updater giữ lease độc quyền.
+- ViewModel nạp/lưu cài đặt, lịch sử, trạng thái công cụ và chờ các write đang chạy
+  trước khi cửa sổ đóng.
 
 ### Kiểm thử
 
@@ -82,6 +91,17 @@ App gọi các dịch vụ qua dependency injection. `yt-dlp` trả metadata JSO
 JSON và đường dẫn tệp cuối bằng template có tiền tố ổn định; đường dẫn cuối phải
 nằm trong thư mục đích trước khi App cho phép mở tệp.
 
+```text
+%LOCALAPPDATA%\SVVideoDownloader
+  settings.json       cấu hình UI không chứa credential
+  history.json        metadata tác vụ hoàn tất
+  logs\               log xoay vòng đã redaction
+  tools\              yt-dlp.exe, ffmpeg.exe, ffprobe.exe do người dùng quản lý
+```
+
+Xóa queue/history chỉ thay đổi collection hoặc `history.json`; không có đường gọi
+`File.Delete` nào nhắm tới `DownloadHistoryEntry.FilePath` hay output media.
+
 ## 4. Nguyên tắc an toàn cho process ngoài
 
 Các nguyên tắc sau đã được áp dụng tại process boundary:
@@ -99,12 +119,30 @@ Các nguyên tắc sau đã được áp dụng tại process boundary:
   chờ process/pipe kết thúc.
 - Không ghi log trong adapter và không đưa stderr, URL, token, cookie hoặc đường
   dẫn vào `MediaOperationError`.
+- Logger ứng dụng che cookie, header authorization, bearer token, password,
+  secret/API key, tùy chọn cookie và URL trước khi ghi; mỗi log tối đa 1 MiB và
+  giữ 5 tệp. Đây là defense-in-depth, không thay thế rà soát thủ công trước chia sẻ.
 - Không coi thành công của process là bằng chứng người dùng có quyền với nội dung.
 
 Các yêu cầu còn mở: xác minh kiến trúc/checksum/chữ ký từ nguồn được phê duyệt,
 và quản lý thư mục tạm riêng theo tác vụ với quy tắc dọn dẹp an toàn.
 
-## 5. Phụ thuộc bên thứ ba và giấy phép
+## 5. Cập nhật yt-dlp thủ công
+
+- Không có timer, background checker hay silent update. Chỉ nút người dùng mới gọi updater.
+- Nguồn cố định là bản phát hành ổn định `yt-dlp/yt-dlp`: `yt-dlp.exe` và
+  `SHA2-256SUMS` từ endpoint `releases/latest/download` qua HTTPS.
+- Giới hạn tải: 100 MiB cho executable, 1 MiB cho checksum.
+- Artifact phải khớp SHA-256 của dòng `yt-dlp.exe` và chạy được `--version` trước
+  khi thay thế.
+- Tệp tạm nằm cùng thư mục đích để rename/replace không đi qua volume khác.
+- Nếu có bản cũ, `File.Replace` tạo backup và thay thế nguyên tử. Bản đã cài được
+  kiểm tra lần nữa; nếu lỗi, backup được đưa trở lại bằng `File.Replace`.
+- Khi rollback thất bại, backup được giữ để phục hồi thủ công; không xóa im lặng.
+- Chưa xác minh chữ ký GPG `SHA2-256SUMS.sig`. Checksum và artifact cùng trust
+  boundary GitHub/TLS nên đây vẫn là hạn chế trước phân phối rộng.
+
+## 6. Phụ thuộc bên thứ ba và giấy phép
 
 Ngày rà soát ban đầu: 2026-07-17. Đây không phải tư vấn pháp lý. Giấy phép phải được xác minh lại theo đúng phiên bản và artifact trước khi phân phối.
 
@@ -112,7 +150,7 @@ Ngày rà soát ban đầu: 2026-07-17. Đây không phải tư vấn pháp lý.
 |---|---|---|---|
 | [.NET 10 / WPF](https://github.com/dotnet/runtime) | Nền tảng ứng dụng | Dùng để build/chạy | Kiểm tra thông báo giấy phép của runtime và hình thức self-contained/framework-dependent khi đóng gói. |
 | [Microsoft.Extensions.DependencyInjection 10.0.8](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection/10.0.8) | Composition root của App | Package runtime | Giấy phép MIT; khóa phiên bản trong project và đưa vào SBOM/third-party notices của gói phát hành. |
-| [yt-dlp](https://github.com/yt-dlp/yt-dlp#license) | Trích xuất metadata và tải nguồn công khai | Adapter đã có; chưa tải/bundle binary | Mã nguồn chính dùng Unlicense, nhưng binary PyInstaller chính thức chứa thành phần khác và được phân phối theo GPLv3+; phải giữ thông báo/nguồn tương ứng nếu phân phối lại. Không suy ra rằng mọi artifact đều chỉ có Unlicense. |
+| [yt-dlp](https://github.com/yt-dlp/yt-dlp#license) | Trích xuất metadata và tải nguồn công khai | Không bundle; người dùng có thể kích hoạt cập nhật thủ công | Mã nguồn chính dùng Unlicense, nhưng binary PyInstaller chính thức chứa thành phần khác và được phân phối theo GPLv3+; phải giữ thông báo/nguồn tương ứng nếu phân phối lại. Không suy ra rằng mọi artifact đều chỉ có Unlicense. |
 | [FFmpeg/ffprobe](https://ffmpeg.org/legal.html) | Kiểm tra, ghép và chuyển đổi media | Probe/tích hợp qua yt-dlp đã có; chưa tải/bundle binary | FFmpeg mặc định là LGPL 2.1+; cấu hình có thành phần GPL làm GPL áp dụng cho toàn bộ build. Phải lưu cấu hình build, nguồn, phiên bản và giấy phép của binary đã chọn. Codec có thể kéo theo cân nhắc bằng sáng chế tùy nơi phân phối. |
 | [xUnit.net](https://xunit.net/) | Kiểm thử | Package phát triển | Apache License 2.0. Không phân phối trong sản phẩm runtime. |
 | `Microsoft.NET.Test.Sdk`, `coverlet.collector`, runner xUnit | Chạy/đo kiểm thử | Package phát triển | Khóa phiên bản trong project; xác minh giấy phép và security advisory khi nâng cấp. Không phân phối trong sản phẩm runtime. |
@@ -121,24 +159,37 @@ README chính thức của yt-dlp hiện cũng nêu JavaScript runtime/engine v�
 
 Trước khi thêm binary, cần lập hồ sơ gồm tên artifact, URL nguồn chính thức, phiên bản cố định, SHA-256/chữ ký, kiến trúc, giấy phép, third-party notices, cấu hình build và quyết định có phân phối lại hay yêu cầu người dùng tự cung cấp.
 
-## 6. Quản lý cấu hình dự kiến
+## 7. Quản lý cấu hình và dữ liệu
 
 - Không hard-code đường dẫn tuyệt đối trên máy phát triển.
-- Cấu hình người dùng chỉ lưu đường dẫn công cụ và thư mục đầu ra sau khi kiểm tra.
+- Root dữ liệu lấy từ `Environment.SpecialFolder.LocalApplicationData`.
+- `settings.json` chỉ lưu thư mục output tuyệt đối và enum chất lượng mặc định.
+- `history.json` chỉ lưu tác vụ hoàn tất; không lưu URL nguồn, cookie hoặc stderr.
+- Save JSON dùng tệp tạm duy nhất và move-overwrite trong cùng thư mục.
 - Không lưu credential trong tệp cấu hình thường.
 - Mặc định không có telemetry.
 - Secrets phục vụ kiểm thử tích hợp, nếu có, phải nằm ngoài kho mã.
 
-## 7. Quyết định kiến trúc đã ghi nhận
+## 8. Publish
+
+Profile `win-x64.pubxml` tạo bản `Release`, self-contained, single-file, không trim
+WPF và extract native library khi cần. Output mặc định là
+`artifacts/publish/win-x64`. Profile không copy thư mục `%LOCALAPPDATA%`, tools,
+log, history, settings hay media.
+
+## 9. Quyết định kiến trúc đã ghi nhận
 
 - ADR tạm thời 001: dùng WPF + MVVM trên .NET 10, Windows x64.
 - ADR tạm thời 002: Core thuần .NET, không phụ thuộc hạ tầng.
 - ADR tạm thời 003: công cụ media chạy ngoài tiến trình, chưa bundle.
 - ADR tạm thời 004: giao diện hoàn toàn bằng tiếng Việt; định danh mã nguồn có thể bằng tiếng Anh.
+- ADR tạm thời 005: dữ liệu riêng nằm trong LocalApplicationData; không telemetry.
+- ADR tạm thời 006: chỉ cập nhật yt-dlp thủ công, có checksum và rollback; FFmpeg
+  vẫn được cung cấp thủ công.
 
 Các ADR trên cần tách thành tài liệu riêng nếu phạm vi hoặc nhóm phát triển mở rộng.
 
-## 8. Rủi ro kiến trúc còn lại
+## 10. Rủi ro kiến trúc còn lại
 
 - Output/progress của `yt-dlp` thay đổi giữa các phiên bản; cần ưu tiên JSON/mẫu có version thay vì parse văn bản tự do.
 - Adapter hiện dựa vào `%(progress)j` và các field JSON của `--dump-single-json`;
@@ -152,5 +203,10 @@ Các ADR trên cần tách thành tài liệu riêng nếu phạm vi hoặc nhó
 - Binary FFmpeg khác nhau có tập codec và giấy phép khác nhau.
 - Xử lý hủy process và tệp tạm sai có thể để lại process/tệp hoặc xóa nhầm dữ liệu.
 - URL và metadata có thể chứa dữ liệu nhạy cảm; thiết kế log cần được threat-model trước.
-- Kiểm tra `--version` xác nhận hình dạng/danh tính cơ bản, không xác minh nguồn
-  cung cấp hoặc tính toàn vẹn; checksum/chữ ký vẫn là điều kiện P0.
+- Kiểm tra `--version` chỉ xác nhận hình dạng/danh tính cơ bản. Updater yt-dlp có
+  SHA-256; FFmpeg/ffprobe thiết lập thủ công vẫn cần quy trình checksum/chữ ký ngoài ứng dụng.
+- Updater kiểm tra SHA-256 nhưng chưa kiểm tra chữ ký GPG của checksum hoặc GitHub
+  release attestation.
+- Logger dùng redaction theo mẫu; chuỗi secret có định dạng mới vẫn có thể lọt qua.
+- Self-contained single-file và updater cần smoke test trên Windows sạch, Defender,
+  SmartScreen và thư mục có chính sách bảo vệ thực tế.

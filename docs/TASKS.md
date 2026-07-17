@@ -26,16 +26,25 @@ Ngày cập nhật: 2026-07-17.
 - [x] Thêm thao tác hủy, thử lại, xóa mục hoàn tất, mở tệp và mở thư mục.
 - [x] Thêm kiểm thử ViewModel dùng dịch vụ giả, không dùng mạng hay binary thật.
 - [x] Parse thumbnail và đường dẫn output có cấu trúc từ yt-dlp vào mô hình Core.
+- [x] Lưu settings/history JSON dưới LocalApplicationData bằng write tạm + thay thế.
+- [x] Nhớ thư mục tải và preset chất lượng; flush write trước khi đóng cửa sổ.
+- [x] Lưu tối đa 500 mục lịch sử hoàn tất; clear không thao tác media.
+- [x] Thêm diagnostic log 1 MiB × 5 với redaction cookie/secret/token/URL.
+- [x] Thêm màn hình trạng thái và phiên bản yt-dlp/FFmpeg/ffprobe.
+- [x] Thêm updater yt-dlp thủ công dùng SHA-256, tệp tạm, replace và rollback.
+- [x] Chặn updater khi metadata/download hoạt động và chặn download khi update.
+- [x] Thêm profile publish self-contained single-file win-x64.
+- [x] Thêm tài liệu thiết lập và khắc phục sự cố cho sử dụng riêng.
 
 ## P0 — quyết định trước khi triển khai tải
 
 - [ ] Duyệt nội dung xác nhận quyền của người dùng và luồng từ chối.
-- [ ] Chọn cách cung cấp `yt-dlp`, FFmpeg/ffprobe: tự cài, cài riêng hoặc tải có chấp thuận.
+- [x] Chọn yt-dlp update thủ công có chấp thuận; FFmpeg/ffprobe do người dùng tự thiết lập.
 - [ ] Chọn artifact/phiên bản, xác minh giấy phép, checksum/chữ ký và lập third-party notices.
 - [ ] Quyết định có hỗ trợ `yt-dlp-ejs`/JavaScript runtime hay không.
 - [ ] Xác định phiên bản Windows tối thiểu và phương thức đóng gói/ký mã.
 - [ ] Hoàn thành threat model cho URL, đường dẫn, process, log và tệp tạm.
-- [ ] Quyết định chính sách dữ liệu: lịch sử, log, telemetry và báo lỗi.
+- [x] Chính sách private-use: settings/history/log chỉ LocalApplicationData, không telemetry.
 
 ## P1 — lõi nghiệp vụ
 
@@ -71,17 +80,19 @@ Ngày cập nhật: 2026-07-17.
 
 - [ ] Thiết lập CI Windows x64 cho restore, build và test.
 - [ ] Tạo kiểm thử tích hợp có fixture hợp pháp do dự án sở hữu.
-- [ ] Thiết kế cập nhật/rollback ứng dụng và công cụ ngoài.
+- [x] Thiết kế cập nhật/rollback yt-dlp; ứng dụng và FFmpeg chưa tự cập nhật.
 - [ ] Tạo SBOM, third-party notices và quy trình rà soát security advisory.
 - [ ] Xác minh đóng gói sạch không chứa binary chưa phê duyệt.
+- [ ] Bổ sung xác minh chữ ký GPG/release attestation cho checksum nếu phát hành rộng.
+- [ ] Smoke test gói self-contained trên Windows sạch, Defender/SmartScreen và DPI.
 
 ## Điều kiện chặn hiện tại
 
-- Chưa có quyết định pháp lý/phân phối cho binary ngoài.
+- Chưa có quyết định phân phối/giấy phép cuối cùng cho FFmpeg và release rộng.
 - Nội dung xác nhận quyền hiện là bản MVP; chưa được duyệt pháp lý/sản phẩm.
 - Chưa quyết định dependency JavaScript cần cho hỗ trợ YouTube đầy đủ.
 
-Adapter Infrastructure đã được nối vào UI nhưng chưa bundle binary và chưa sẵn
-sàng phân phối. Luồng chỉ chạy khi nhà phát triển tự cung cấp công cụ trong thư
-mục `tools`; không phát hành cho người dùng cho đến khi các mục P0 liên quan được
-xử lý.
+App private-use dùng `%LOCALAPPDATA%\SVVideoDownloader\tools`; không bundle binary.
+Updater yt-dlp là thao tác thủ công và không nhập cookie. Chưa coi bản publish là
+gói phát hành rộng cho đến khi hoàn tất giấy phép, signature/attestation, ký mã và
+smoke test Windows sạch.

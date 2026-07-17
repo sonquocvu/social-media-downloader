@@ -27,6 +27,19 @@ tools/
 yt-dlp.exe
 ffmpeg.exe
 ffprobe.exe
+.yt-dlp.*.download
+.yt-dlp.*.backup
+.yt-dlp.*.sha256
+
+# Local application data and secrets
+settings.json
+history.json
+.env
+.env.*
+cookies.txt
+*.pfx
+*.p12
+*.key
 
 # Publish output and installers
 publish/
@@ -41,6 +54,19 @@ Desktop.ini
 
 # Logs and temporary files
 *.log
+*.log.*
 *.tmp
 *.temp
 ~$*
+
+# Downloaded media and partial downloads
+*.mp4
+*.mkv
+*.webm
+*.mov
+*.avi
+*.mp3
+*.m4a
+*.opus
+*.part
+*.ytdl

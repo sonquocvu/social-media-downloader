@@ -45,6 +45,8 @@ public sealed class DownloadItemViewModel : ViewModelBase, IDisposable
         _remove = remove ?? throw new ArgumentNullException(nameof(remove));
 
         Title = videoInfo.Title;
+        Platform = videoInfo.Source.Platform;
+        Quality = request.Options.QualityPreset;
         SourceText = DisplayFormatter.GetPlatformName(videoInfo.Source.Platform);
         OutputFolder = outputFolder;
 
@@ -58,6 +60,12 @@ public sealed class DownloadItemViewModel : ViewModelBase, IDisposable
     public event EventHandler? StateChanged;
 
     public string Title { get; }
+
+    public Guid Id { get; } = Guid.NewGuid();
+
+    public SupportedPlatform Platform { get; }
+
+    public QualityPreset Quality { get; }
 
     public string SourceText { get; }
 
@@ -205,6 +213,8 @@ public sealed class DownloadItemViewModel : ViewModelBase, IDisposable
         _executionTask = RunAsync();
         return _executionTask;
     }
+
+    public Task WaitForCompletionAsync() => _executionTask ?? Task.CompletedTask;
 
     public void Cancel()
     {

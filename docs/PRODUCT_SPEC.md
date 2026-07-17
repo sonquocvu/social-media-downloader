@@ -8,6 +8,9 @@ Phiên bản hiện tại có giao diện WPF/MVVM đầu tiên và adapter tả
 hoạt động khi nhà phát triển tự cung cấp các executable ngoài đã được rà soát;
 kho mã không tải hoặc phân phối các binary đó.
 
+Bản private-use lưu tùy chọn và lịch sử cục bộ, không có telemetry, đồng thời cho
+phép người dùng chủ động cài/cập nhật yt-dlp từ bản phát hành ổn định chính thức.
+
 ## 2. Người dùng mục tiêu
 
 - Người dùng Việt Nam quản lý nội dung do mình tạo.
@@ -32,7 +35,8 @@ kho mã không tải hoặc phân phối các binary đó.
 - Thu thập mật khẩu, token, cookie hoặc hồ sơ trình duyệt một cách tự động.
 - Tải nội dung riêng tư chỉ vì người dùng có URL.
 - Hỗ trợ nền tảng ngoài YouTube, TikTok và Facebook trong giai đoạn đầu.
-- Tải hay đóng gói binary bên thứ ba trong khung hiện tại.
+- Tự động tải ngầm hoặc đóng gói binary bên thứ ba; chỉ updater yt-dlp thủ công
+  có xác nhận của người dùng nằm trong phạm vi private-use.
 
 ## 5. Luồng chính dự kiến
 
@@ -57,6 +61,12 @@ tệp trùng và phân phối binary vẫn phải được phê duyệt trước
 - FR-06: Cho phép hủy an toàn và dọn tệp tạm theo chính sách đã thống nhất.
 - FR-07: Không ghi URL đầy đủ, cookie, token hoặc dữ liệu nhạy cảm vào log mặc định.
 - FR-08: Kiểm tra sự tồn tại và phiên bản tương thích của công cụ ngoài trước khi chạy.
+- FR-09: Nhớ thư mục tải và chất lượng mặc định dưới LocalApplicationData.
+- FR-10: Lưu lịch sử tác vụ hoàn tất; xóa lịch sử không xóa media.
+- FR-11: Nhật ký chẩn đoán xoay vòng và che URL/cookie/secret/token theo mẫu.
+- FR-12: Hiển thị availability, version và path của yt-dlp/FFmpeg/ffprobe.
+- FR-13: Chỉ cập nhật yt-dlp khi người dùng yêu cầu; không chạy song song với
+  download/metadata; xác minh checksum/executable và rollback khi hậu kiểm thất bại.
 
 ## 7. Yêu cầu phi chức năng
 
@@ -66,6 +76,7 @@ tệp trùng và phân phối binary vẫn phải được phê duyệt trước
 - NFR-04: Process ngoài phải hỗ trợ timeout, hủy và thu thập đầu ra có giới hạn.
 - NFR-05: Không ghép shell command từ dữ liệu người dùng.
 - NFR-06: Mọi thông báo hiển thị cho người dùng phải bằng tiếng Việt.
+- NFR-07: Bản publish self-contained win-x64 không chứa binary media hoặc dữ liệu cá nhân.
 
 ## 8. Tiêu chí hoàn thành khung ban đầu
 
@@ -81,17 +92,18 @@ tệp trùng và phân phối binary vẫn phải được phê duyệt trước
 - Người dùng tự chịu trách nhiệm xác nhận quyền đối với nội dung.
 - Nguồn video được truy cập không yêu cầu né biện pháp kỹ thuật hoặc truy cập tài khoản trái phép.
 - Các executable ngoài sẽ là bản Windows x64 và được gọi trực tiếp, không qua shell.
+- Người dùng private-use có quyền ghi `%LOCALAPPDATA%\SVVideoDownloader`.
 - Kết nối mạng, điều khoản nền tảng và bộ trích xuất của `yt-dlp` có thể thay đổi độc lập với ứng dụng.
 
 ## 10. Quyết định chưa giải quyết
 
-- Cơ chế cung cấp công cụ ngoài: người dùng tự cài, trình cài đặt riêng hay tải theo yêu cầu sau khi chấp thuận.
+- Phương thức phân phối FFmpeg/ffprobe vẫn là thiết lập thủ công; yt-dlp có updater thủ công.
 - Nguồn, phiên bản cố định, checksum và giấy phép chính xác của từng binary.
 - Có cần JavaScript runtime và `yt-dlp-ejs` để duy trì hỗ trợ YouTube đầy đủ hay không.
-- Chính sách cập nhật và quay lui `yt-dlp`/FFmpeg.
+- Có cần xác minh GPG/release attestation ngoài SHA-256 cho updater yt-dlp hay không.
 - Định nghĩa chính xác về video Facebook/TikTok “công khai” và cách xử lý URL chuyển hướng.
 - Phê duyệt cuối cùng cho nội dung xác nhận quyền và tuyên bố pháp lý MVP.
 - Định dạng mặc định, quy tắc đặt tên, xử lý trùng tệp và thư mục mặc định.
-- Chính sách giữ lịch sử, log, telemetry và báo lỗi.
+- Thời gian giữ lịch sử dài hạn ngoài giới hạn hiện tại 500 mục; mặc định không telemetry.
 - Ma trận kiểm thử accessibility, high contrast, DPI và phiên bản Windows tối thiểu.
 - Hình thức phân phối ứng dụng và ký mã.

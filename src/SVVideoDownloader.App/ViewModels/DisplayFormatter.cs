@@ -46,4 +46,14 @@ internal static class DisplayFormatter
         SupportedPlatform.Facebook => "Facebook",
         _ => "Không xác định",
     };
+
+    public static string GetQualityName(QualityPreset quality) => quality switch
+    {
+        QualityPreset.Best => "Tốt nhất",
+        QualityPreset.Video1080p => "Video 1080p",
+        QualityPreset.Video720p => "Video 720p",
+        QualityPreset.Video480p => "Video 480p",
+        QualityPreset.AudioMp3 => "Âm thanh MP3",
+        _ => "Không xác định",
+    };
 }

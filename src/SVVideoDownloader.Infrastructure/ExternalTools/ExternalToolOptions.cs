@@ -50,10 +50,20 @@ public sealed class ExternalToolOptions
     public static ExternalToolOptions CreateDefault(string outputDirectory)
     {
         var toolsDirectory = Path.Combine(AppContext.BaseDirectory, "tools");
+        return CreateForToolsDirectory(toolsDirectory, outputDirectory);
+    }
+
+    public static ExternalToolOptions CreateForToolsDirectory(
+        string toolsDirectory,
+        string outputDirectory)
+    {
+        var validatedToolsDirectory = ValidateAbsolutePath(
+            toolsDirectory,
+            nameof(toolsDirectory));
         return new ExternalToolOptions(
-            Path.Combine(toolsDirectory, ExternalToolNames.YtDlp),
-            Path.Combine(toolsDirectory, ExternalToolNames.Ffmpeg),
-            Path.Combine(toolsDirectory, ExternalToolNames.Ffprobe),
+            Path.Combine(validatedToolsDirectory, ExternalToolNames.YtDlp),
+            Path.Combine(validatedToolsDirectory, ExternalToolNames.Ffmpeg),
+            Path.Combine(validatedToolsDirectory, ExternalToolNames.Ffprobe),
             outputDirectory);
     }
 

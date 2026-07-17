@@ -3,6 +3,10 @@ using SVVideoDownloader.App.ViewModels;
 using SVVideoDownloader.Core.Downloads;
 using SVVideoDownloader.Core.Media;
 using SVVideoDownloader.Core.Videos;
+using SVVideoDownloader.Infrastructure.ApplicationData;
+using SVVideoDownloader.Infrastructure.Diagnostics;
+using SVVideoDownloader.Infrastructure.ExternalTools;
+using SVVideoDownloader.Infrastructure.Updates;
 
 namespace SVVideoDownloader.App.Tests;
 
@@ -99,6 +103,82 @@ internal sealed class ImmediateDispatcher : IUiDispatcher
     public void Post(Action action) => action();
 }
 
+internal sealed class FakeUserDataService : IUserDataService
+{
+    public List<ApplicationSettings> SavedSettings { get; } = [];
+
+    public List<DownloadHistoryEntry> History { get; } = [];
+
+    public Task SaveSettingsAsync(
+        ApplicationSettings settings,
+        CancellationToken cancellationToken = default)
+    {
+        SavedSettings.Add(settings);
+        return Task.CompletedTask;
+    }
+
+    public Task<IReadOnlyList<DownloadHistoryEntry>> LoadHistoryAsync(
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<DownloadHistoryEntry>>(History.ToArray());
+
+    public Task AddHistoryAsync(
+        DownloadHistoryEntry entry,
+        CancellationToken cancellationToken = default)
+    {
+        History.Insert(0, entry);
+        return Task.CompletedTask;
+    }
+
+    public Task ClearHistoryAsync(CancellationToken cancellationToken = default)
+    {
+        History.Clear();
+        return Task.CompletedTask;
+    }
+}
+
+internal sealed class FakeToolManagementService : IToolManagementService
+{
+    public Func<Task<ToolUpdateOperationResult>> UpdateHandler { get; set; } = () =>
+        Task.FromResult(
+            new ToolUpdateOperationResult(
+                false,
+                new YtDlpUpdateResult(YtDlpUpdateStatus.Success, "2026.07.17")));
+
+    public IReadOnlyList<ExternalToolStatus> Statuses { get; set; } =
+    [
+        new(ExternalToolKind.YtDlp, @"C:\Tools\yt-dlp.exe", true, "2026.07.17", null),
+        new(ExternalToolKind.Ffmpeg, @"C:\Tools\ffmpeg.exe", true, "8.0", null),
+        new(ExternalToolKind.Ffprobe, @"C:\Tools\ffprobe.exe", true, "8.0", null),
+    ];
+
+    public int UpdateCallCount { get; private set; }
+
+    public Task<IReadOnlyList<ExternalToolStatus>> CheckStatusAsync(
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(Statuses);
+
+    public Task<ToolUpdateOperationResult> UpdateYtDlpAsync(
+        CancellationToken cancellationToken = default)
+    {
+        UpdateCallCount++;
+        return UpdateHandler();
+    }
+}
+
+internal sealed class FakeDiagnosticLogger : IDiagnosticLogger
+{
+    public List<string> Messages { get; } = [];
+
+    public Task LogAsync(
+        DiagnosticLogLevel level,
+        string message,
+        CancellationToken cancellationToken = default)
+    {
+        Messages.Add($"{level}:{message}");
+        return Task.CompletedTask;
+    }
+}
+
 internal static class TestData
 {
     public const string OutputFolder = @"C:\Video";
@@ -132,12 +212,18 @@ internal static class TestData
         FakeMetadataProvider? metadata = null,
         FakeDownloadCoordinator? downloads = null,
         FakeFolderPickerService? folders = null,
-        FakeFileActionService? files = null) =>
+        FakeFileActionService? files = null,
+        FakeUserDataService? userData = null,
+        FakeToolManagementService? tools = null,
+        QualityPreset defaultQuality = QualityPreset.Best) =>
         new(
             metadata ?? new FakeMetadataProvider(),
             downloads ?? new FakeDownloadCoordinator(),
             folders ?? new FakeFolderPickerService(),
             files ?? new FakeFileActionService(),
             new ImmediateDispatcher(),
-            new AppUiOptions(OutputFolder));
+            userData ?? new FakeUserDataService(),
+            tools ?? new FakeToolManagementService(),
+            new FakeDiagnosticLogger(),
+            new AppUiOptions(OutputFolder, defaultQuality));
 }

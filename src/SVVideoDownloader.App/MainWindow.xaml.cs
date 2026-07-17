@@ -6,18 +6,44 @@ namespace SVVideoDownloader.App;
 
 public partial class MainWindow : Window
 {
-    private readonly MainWindowViewModel _viewModel;
+    private bool _closeApproved;
+    private bool _closePreparationStarted;
 
     public MainWindow(MainWindowViewModel viewModel)
     {
-        _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
+        ViewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         InitializeComponent();
-        DataContext = _viewModel;
+        DataContext = ViewModel;
     }
 
-    protected override void OnClosing(CancelEventArgs e)
+    public MainWindowViewModel ViewModel { get; }
+
+    protected override async void OnClosing(CancelEventArgs e)
     {
-        if (_viewModel.HasActiveDownloads)
+        if (_closeApproved)
+        {
+            base.OnClosing(e);
+            return;
+        }
+
+        e.Cancel = true;
+        if (_closePreparationStarted)
+        {
+            return;
+        }
+
+        if (ViewModel.IsUpdatingYtDlp)
+        {
+            MessageBox.Show(
+                this,
+                "Đang cập nhật yt-dlp. Hãy đợi cập nhật hoàn tất rồi đóng ứng dụng.",
+                "Chưa thể thoát",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
+        if (ViewModel.HasActiveDownloads)
         {
             var answer = MessageBox.Show(
                 this,
@@ -29,19 +55,32 @@ public partial class MainWindow : Window
 
             if (answer != MessageBoxResult.Yes)
             {
-                e.Cancel = true;
                 return;
             }
-
-            _viewModel.CancelAllActiveDownloads();
         }
 
-        base.OnClosing(e);
+        _closePreparationStarted = true;
+        try
+        {
+            await ViewModel.PrepareForCloseAsync();
+            _closeApproved = true;
+            Close();
+        }
+        catch (Exception)
+        {
+            _closePreparationStarted = false;
+            MessageBox.Show(
+                this,
+                "Không thể hoàn tất việc đóng ứng dụng an toàn. Hãy thử lại.",
+                "Không thể thoát",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
     }
 
     protected override void OnClosed(EventArgs e)
     {
-        _viewModel.Dispose();
+        ViewModel.Dispose();
         base.OnClosed(e);
     }
 }
