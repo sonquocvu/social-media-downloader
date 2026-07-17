@@ -19,15 +19,29 @@ SVVideoDownloader.Core <--- SVVideoDownloader.Infrastructure
 ### `SVVideoDownloader.Core`
 
 - Target `net10.0`.
-- Chứa mô hình nguồn video, quy tắc nhận diện nền tảng và các hợp đồng nghiệp vụ trong tương lai.
+- Chứa mô hình nguồn video, metadata, định dạng, yêu cầu/tùy chọn tải, tiến độ,
+  trạng thái và các hợp đồng nghiệp vụ.
 - Không tham chiếu WPF, `System.Diagnostics.Process`, filesystem, mạng hoặc tên/cú pháp của `yt-dlp`.
-- Hiện có `VideoSource` và `SupportedPlatform`.
+- Cung cấp `IVideoMetadataProvider` và `IVideoDownloadService`; hai hợp đồng chỉ
+  dùng mô hình Core, `CancellationToken` và `IProgress<DownloadProgress>`.
+- Lỗi runtime được biểu diễn bằng `MediaErrorCategory` + `MediaComponent` để UI
+  ánh xạ sang thông báo tiếng Việt mà không nhận stderr hoặc dữ liệu nhạy cảm.
 
 ### `SVVideoDownloader.Infrastructure`
 
 - Target `net10.0` và chỉ phụ thuộc Core.
-- Sẽ sở hữu việc tìm executable, chạy process, đọc/ghi filesystem, parse JSON từ `yt-dlp`, kiểm tra phiên bản và ánh xạ lỗi.
-- Hiện chỉ khai báo tên mặc định của `yt-dlp.exe`, `ffmpeg.exe` và `ffprobe.exe`; không chạy hay tải binary.
+- Sở hữu cấu hình đường dẫn executable, process runner, kiểm tra danh tính/phiên
+  bản, parse JSON từ `yt-dlp`, ánh xạ lỗi và tạo output template.
+- `YtDlpMediaService` triển khai hai hợp đồng Core. Metadata dùng
+  `--dump-single-json`; tiến độ dùng JSON từ `--progress-template`.
+- Mọi lời gọi dùng `ProcessStartInfo.ArgumentList`, `UseShellExecute=false`,
+  redirect đồng thời stdout/stderr và tuyệt đối không gọi `cmd.exe`, PowerShell
+  hoặc `pwsh`.
+- `--ignore-config` ngăn cấu hình yt-dlp ngoài ứng dụng tự thêm cookie, proxy,
+  credential hoặc hành vi playlist. `--no-playlist` giữ phạm vi một video cho MVP.
+- FFmpeg/ffprobe được kiểm tra bằng `-version`; thư mục chứa hai binary được
+  truyền cho yt-dlp bằng `--ffmpeg-location`.
+- Không có binary nào được tải hoặc đóng gói trong kho mã.
 
 ### `SVVideoDownloader.App`
 
@@ -39,34 +53,46 @@ SVVideoDownloader.Core <--- SVVideoDownloader.Infrastructure
 ### Kiểm thử
 
 - `SVVideoDownloader.Core.Tests` kiểm tra nhận diện URL, các trường hợp URL không an toàn và tham chiếu assembly bị cấm.
-- `SVVideoDownloader.Infrastructure.Tests` kiểm tra cấu hình nền tảng ban đầu.
+- `SVVideoDownloader.Infrastructure.Tests` dùng process runner giả, không dùng
+  Internet hoặc executable thật; kiểm tra argument, JSON metadata/progress,
+  timeout, cancellation, nhận diện công cụ và che dữ liệu nhạy cảm.
 - Cả hai dùng xUnit và target `net10.0`.
 
-## 3. Luồng tích hợp dự kiến
+## 3. Luồng tích hợp
 
 ```text
 View -> ViewModel -> dịch vụ ứng dụng/Core
                     -> cổng Infrastructure
                     -> yt-dlp (JSON/progress)
-                    -> ffprobe (metadata media)
-                    -> ffmpeg (ghép/chuyển đổi)
+                    -> ffprobe (kiểm tra toolchain)
+                    -> ffmpeg qua yt-dlp (ghép/chuyển đổi)
 ```
 
-Không đưa kiểu `Process`, đường dẫn tệp hoặc đối số `yt-dlp` vào Core. Infrastructure chuyển kết quả công cụ ngoài thành mô hình Core trước khi trả về App.
+Không đưa kiểu `Process`, đường dẫn tệp hoặc đối số `yt-dlp` vào Core.
+Infrastructure chuyển JSON công cụ ngoài thành mô hình Core trước khi trả về App.
+App chưa gọi các dịch vụ này nên chưa có luồng tải end-to-end trong giao diện.
 
 ## 4. Nguyên tắc an toàn cho process ngoài
 
-Phần này là yêu cầu cho giai đoạn triển khai, chưa phải chức năng hiện có.
+Các nguyên tắc sau đã được áp dụng tại process boundary:
 
-- Gọi executable trực tiếp bằng `ProcessStartInfo.ArgumentList`; không qua `cmd.exe` hoặc PowerShell.
+- Gọi executable trực tiếp bằng `ProcessStartInfo.ArgumentList`; chặn `cmd.exe`,
+  PowerShell, `pwsh` và các tên shell tương đương.
 - Không nội suy URL/đường dẫn vào chuỗi lệnh shell.
 - Chỉ cho phép tập tùy chọn `yt-dlp` được ứng dụng định nghĩa.
 - Không bật cờ vượt DRM và không tự đọc cookie trình duyệt/netrc.
-- Xác thực đường dẫn executable, phiên bản, kiến trúc và checksum từ nguồn đã phê duyệt.
-- Đọc `stdout`/`stderr` bất đồng bộ, giới hạn kích thước, hỗ trợ hủy/timeout và kết thúc cây process khi cần.
-- Che URL query, token, cookie và đường dẫn nhạy cảm trong log.
-- Dùng thư mục tạm riêng cho mỗi tác vụ; xác minh đường dẫn trước khi dọn dẹp.
+- Yêu cầu đường dẫn executable tuyệt đối và kiểm tra danh tính cơ bản qua
+  `--version`/`-version` trước khi chạy tác vụ.
+- Đọc `stdout`/`stderr` bất đồng bộ và đồng thời, vẫn drain sau khi đạt giới hạn
+  capture để tránh deadlock.
+- Hỗ trợ hủy/timeout; dùng `Kill(entireProcessTree: true)` và giới hạn thời gian
+  chờ process/pipe kết thúc.
+- Không ghi log trong adapter và không đưa stderr, URL, token, cookie hoặc đường
+  dẫn vào `MediaOperationError`.
 - Không coi thành công của process là bằng chứng người dùng có quyền với nội dung.
+
+Các yêu cầu còn mở: xác minh kiến trúc/checksum/chữ ký từ nguồn được phê duyệt,
+và quản lý thư mục tạm riêng theo tác vụ với quy tắc dọn dẹp an toàn.
 
 ## 5. Phụ thuộc bên thứ ba và giấy phép
 
@@ -75,8 +101,8 @@ Ngày rà soát ban đầu: 2026-07-17. Đây không phải tư vấn pháp lý.
 | Phụ thuộc | Vai trò | Tình trạng | Cân nhắc giấy phép/phân phối |
 |---|---|---|---|
 | [.NET 10 / WPF](https://github.com/dotnet/runtime) | Nền tảng ứng dụng | Dùng để build/chạy | Kiểm tra thông báo giấy phép của runtime và hình thức self-contained/framework-dependent khi đóng gói. |
-| [yt-dlp](https://github.com/yt-dlp/yt-dlp#license) | Trích xuất metadata và tải nguồn công khai | Chưa tải, chưa tích hợp | Mã nguồn chính dùng Unlicense, nhưng binary PyInstaller chính thức chứa thành phần khác và được phân phối theo GPLv3+; phải giữ thông báo/nguồn tương ứng nếu phân phối lại. Không suy ra rằng mọi artifact đều chỉ có Unlicense. |
-| [FFmpeg/ffprobe](https://ffmpeg.org/legal.html) | Kiểm tra, ghép và chuyển đổi media | Chưa tải, chưa tích hợp | FFmpeg mặc định là LGPL 2.1+; cấu hình có thành phần GPL làm GPL áp dụng cho toàn bộ build. Phải lưu cấu hình build, nguồn, phiên bản và giấy phép của binary đã chọn. Codec có thể kéo theo cân nhắc bằng sáng chế tùy nơi phân phối. |
+| [yt-dlp](https://github.com/yt-dlp/yt-dlp#license) | Trích xuất metadata và tải nguồn công khai | Adapter đã có; chưa tải/bundle binary | Mã nguồn chính dùng Unlicense, nhưng binary PyInstaller chính thức chứa thành phần khác và được phân phối theo GPLv3+; phải giữ thông báo/nguồn tương ứng nếu phân phối lại. Không suy ra rằng mọi artifact đều chỉ có Unlicense. |
+| [FFmpeg/ffprobe](https://ffmpeg.org/legal.html) | Kiểm tra, ghép và chuyển đổi media | Probe/tích hợp qua yt-dlp đã có; chưa tải/bundle binary | FFmpeg mặc định là LGPL 2.1+; cấu hình có thành phần GPL làm GPL áp dụng cho toàn bộ build. Phải lưu cấu hình build, nguồn, phiên bản và giấy phép của binary đã chọn. Codec có thể kéo theo cân nhắc bằng sáng chế tùy nơi phân phối. |
 | [xUnit.net](https://xunit.net/) | Kiểm thử | Package phát triển | Apache License 2.0. Không phân phối trong sản phẩm runtime. |
 | `Microsoft.NET.Test.Sdk`, `coverlet.collector`, runner xUnit | Chạy/đo kiểm thử | Package phát triển | Khóa phiên bản trong project; xác minh giấy phép và security advisory khi nâng cấp. Không phân phối trong sản phẩm runtime. |
 
@@ -104,8 +130,12 @@ Các ADR trên cần tách thành tài liệu riêng nếu phạm vi hoặc nhó
 ## 8. Rủi ro kiến trúc còn lại
 
 - Output/progress của `yt-dlp` thay đổi giữa các phiên bản; cần ưu tiên JSON/mẫu có version thay vì parse văn bản tự do.
+- Adapter hiện dựa vào `%(progress)j` và các field JSON của `--dump-single-json`;
+  cần khóa phiên bản tương thích và có fixture khi chọn binary phát hành.
 - Nền tảng có thể thay đổi URL, điều khoản hoặc biện pháp chống tự động hóa mà không báo trước.
 - Hỗ trợ YouTube đầy đủ có thể làm tăng dependency và nghĩa vụ giấy phép do JavaScript runtime/`yt-dlp-ejs`.
 - Binary FFmpeg khác nhau có tập codec và giấy phép khác nhau.
 - Xử lý hủy process và tệp tạm sai có thể để lại process/tệp hoặc xóa nhầm dữ liệu.
 - URL và metadata có thể chứa dữ liệu nhạy cảm; thiết kế log cần được threat-model trước.
+- Kiểm tra `--version` xác nhận hình dạng/danh tính cơ bản, không xác minh nguồn
+  cung cấp hoặc tính toàn vẹn; checksum/chữ ký vẫn là điều kiện P0.
