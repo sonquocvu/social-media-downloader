@@ -1,0 +1,59 @@
+<Window x:Class="SVVideoDownloader.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="SV Video Downloader"
+        Width="760"
+        Height="440"
+        MinWidth="640"
+        MinHeight="380"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="32">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock FontSize="28"
+                   FontWeight="SemiBold"
+                   Text="Tải video bạn có quyền sử dụng" />
+
+        <TextBlock Grid.Row="1"
+                   Margin="0,12,0,0"
+                   Foreground="DimGray"
+                   Text="Hỗ trợ liên kết công khai từ YouTube, TikTok và Facebook."
+                   TextWrapping="Wrap" />
+
+        <Border Grid.Row="2"
+                Margin="0,24,0,0"
+                Padding="16"
+                Background="#FFF4E5"
+                CornerRadius="6">
+            <TextBlock Text="Chỉ tải nội dung do bạn sở hữu hoặc được phép tải. Ứng dụng không vượt DRM, tường phí, CAPTCHA hoặc truy cập tài khoản trái phép."
+                       TextWrapping="Wrap" />
+        </Border>
+
+        <StackPanel Grid.Row="3" Margin="0,24,0,0">
+            <TextBlock Margin="0,0,0,8" Text="Liên kết video" />
+            <DockPanel LastChildFill="True">
+                <Button DockPanel.Dock="Right"
+                        MinWidth="112"
+                        Margin="12,0,0,0"
+                        Padding="16,8"
+                        Command="{Binding ShowNotImplementedCommand}"
+                        Content="Tải xuống" />
+                <TextBox MinHeight="38"
+                         Padding="10,7"
+                         Text="{Binding VideoUrl, UpdateSourceTrigger=PropertyChanged}" />
+            </DockPanel>
+        </StackPanel>
+
+        <TextBlock Grid.Row="4"
+                   Margin="0,18,0,0"
+                   Foreground="DimGray"
+                   Text="{Binding StatusMessage}"
+                   TextWrapping="Wrap" />
+    </Grid>
+</Window>
