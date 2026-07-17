@@ -72,6 +72,8 @@ tệp trùng và phân phối binary vẫn phải được phê duyệt trước
 - FR-15: Chỉ cài/cập nhật FFmpeg khi người dùng xác nhận nguồn và GPLv3; tải một
   gói Windows x64 chứa cả `ffmpeg.exe` và `ffprobe.exe`, kiểm tra SHA-256, xác
   minh cả hai executable và rollback theo cặp nếu thay thế/hậu kiểm thất bại.
+- FR-16: Cung cấp MSI x64 có phiên bản và hỗ trợ cài mới, nâng cấp, chặn hạ cấp,
+  gỡ ứng dụng mà không xóa LocalApplicationData hoặc media của người dùng.
 
 ## 7. Yêu cầu phi chức năng
 
@@ -84,6 +86,8 @@ tệp trùng và phân phối binary vẫn phải được phê duyệt trước
 - NFR-07: Bản publish self-contained win-x64 không chứa binary media hoặc dữ liệu cá nhân.
 - NFR-08: Cả hai bảng màu phải giữ nhãn accessibility, focus bàn phím, độ tương phản dễ đọc
   và bố cục cuộn được khi phóng to giao diện.
+- NFR-09: MSI chỉ chứa ứng dụng self-contained; không chứa yt-dlp, FFmpeg,
+  ffprobe, settings, history, log, secret hoặc media.
 
 ## 8. Tiêu chí hoàn thành khung ban đầu
 
@@ -101,6 +105,8 @@ tệp trùng và phân phối binary vẫn phải được phê duyệt trước
 - Các executable ngoài sẽ là bản Windows x64 và được gọi trực tiếp, không qua shell.
 - Người dùng private-use có quyền ghi `%LOCALAPPDATA%\SVVideoDownloader`.
 - Kết nối mạng, điều khoản nền tảng và bộ trích xuất của `yt-dlp` có thể thay đổi độc lập với ứng dụng.
+- Các phiên bản tương lai tăng ít nhất một phần `MAJOR.MINOR.PATCH` và giữ nguyên
+  MSI UpgradeCode để thay phiên bản cũ.
 
 ## 10. Quyết định chưa giải quyết
 
@@ -114,4 +120,5 @@ tệp trùng và phân phối binary vẫn phải được phê duyệt trước
 - Định dạng mặc định, quy tắc đặt tên, xử lý trùng tệp và thư mục mặc định.
 - Thời gian giữ lịch sử dài hạn ngoài giới hạn hiện tại 500 mục; mặc định không telemetry.
 - Ma trận kiểm thử accessibility, high contrast, DPI và phiên bản Windows tối thiểu.
-- Hình thức phân phối ứng dụng và ký mã.
+- Phiên bản Windows tối thiểu, chứng thư/quy trình ký mã và kênh phân phối artifact.
+- Quyết định thời điểm chuyển khỏi WiX v3 đã hết hỗ trợ và phiên bản WiX đích.

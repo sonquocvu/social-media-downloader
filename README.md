@@ -2,6 +2,8 @@
 
 SVVideoDownloader là ứng dụng WPF riêng tư bằng tiếng Việt dành cho Windows x64. Mục tiêu của ứng dụng là tải video công khai do người dùng sở hữu hoặc được cho phép tải từ YouTube, TikTok và Facebook.
 
+Phiên bản hiện tại: **1.0.0**.
+
 > Trạng thái hiện tại: đã sẵn sàng để thử nghiệm sử dụng riêng hằng ngày trên
 > Windows x64. Ứng dụng có cài đặt được nhớ, lịch sử tải, nhật ký chẩn đoán xoay
 > vòng, màn hình trạng thái công cụ và luồng cập nhật thủ công cho yt-dlp cùng
@@ -42,6 +44,24 @@ Gói self-contained được tạo tại `artifacts/publish/win-x64`. Máy sử 
 cần cài .NET runtime riêng. Xem [thiết lập Windows](docs/SETUP.md) và
 [khắc phục sự cố](docs/TROUBLESHOOTING.md).
 
+## Cài đặt phiên bản 1.0.0
+
+Gói cài đặt x64 được tạo tại:
+
+```text
+artifacts\installer\SVVideoDownloader-1.0.0-win-x64.msi
+```
+
+Mở MSI và chấp nhận yêu cầu quyền quản trị để cài vào Program Files. Gói tạo
+shortcut ở Start Menu và Desktop, hỗ trợ gỡ cài đặt trong Windows Settings và
+không yêu cầu .NET runtime riêng. yt-dlp, FFmpeg và ffprobe không nằm trong MSI;
+cài chúng thủ công từ màn hình “Công cụ và cài đặt” sau lần chạy đầu tiên.
+
+MSI/executable 1.0.0 hiện chưa được ký mã nên Defender hoặc SmartScreen có thể
+cảnh báo. Chỉ dùng artifact do bạn tự build hoặc nhận qua kênh tin cậy và kiểm
+tra SHA-256 trước khi chạy. Xem [quy trình phát hành](docs/RELEASING.md) và
+[nhật ký thay đổi](CHANGELOG.md) để tạo phiên bản mới.
+
 ## Giao diện hiện có
 
 - Dán và phân tích URL HTTPS công khai của YouTube, TikTok hoặc Facebook.
@@ -73,7 +93,8 @@ xử lý URL playlist như một video trừ khi phạm vi được thay đổi 
 
 Xem [đặc tả sản phẩm](docs/PRODUCT_SPEC.md), [kiến trúc](docs/ARCHITECTURE.md),
 [thiết lập](docs/SETUP.md), [khắc phục sự cố](docs/TROUBLESHOOTING.md) và
-[công việc](docs/TASKS.md) trước khi mở rộng chức năng.
+[công việc](docs/TASKS.md) trước khi mở rộng chức năng. Quy trình đánh phiên bản,
+nâng cấp MSI và phát hành nằm trong [RELEASING.md](docs/RELEASING.md).
 
 ## Dữ liệu cục bộ
 
@@ -94,3 +115,7 @@ ngầm và không xóa media khi xóa hàng đợi hoặc lịch sử.
 được dùng cho composition root. Giấy phép của binary thực tế phải được rà soát
 trước khi chọn nguồn và hình thức phân phối. Chi tiết nằm trong
 [tài liệu kiến trúc](docs/ARCHITECTURE.md#phụ-thuộc-bên-thứ-ba-và-giấy-phép).
+
+WiX Toolset v3.11 chỉ được dùng trên máy build để tạo MSI và không được nhúng
+trong sản phẩm. WiX v3 đã hết hỗ trợ cộng đồng; cần chuyển sang nhánh còn được
+hỗ trợ trước khi duy trì phát hành dài hạn.

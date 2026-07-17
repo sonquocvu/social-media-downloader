@@ -1,5 +1,23 @@
 # Khắc phục sự cố
 
+## Windows cảnh báo khi mở MSI hoặc ứng dụng
+
+Phiên bản 1.0.0 chưa được ký mã. Chỉ tiếp tục nếu MSI đến từ kênh tin cậy và
+SHA-256 khớp ghi chú phát hành. Không tắt Defender/SmartScreen trên toàn hệ thống.
+Nếu antivirus cách ly hoặc khóa tệp, ghi lại tên sản phẩm bảo vệ và thông báo,
+sau đó kiểm tra artifact trên máy build; không thêm ngoại lệ rộng cho Program
+Files hoặc LocalApplicationData.
+
+## MSI không cài đặt được
+
+- Xác nhận hệ điều hành là Windows x64 và tài khoản có thể chấp nhận quyền quản trị.
+- Gỡ bản thử nghiệm có cùng phiên bản `1.0.0` trước khi cài một artifact 1.0.0
+  khác; Windows Installer không coi hai package cùng ProductVersion là nâng cấp.
+- Nếu máy đã có phiên bản mới hơn, MSI cũ phải từ chối hạ cấp bằng thông báo tiếng Việt.
+- Thu thập log cài đặt bằng `msiexec.exe /i <đường-dẫn-msi> /L*v <đường-dẫn-log>`
+  trong phiên chẩn đoán do người dùng kiểm soát; rà soát log trước khi chia sẻ.
+- Gỡ cài đặt hoặc lỗi MSI không được xóa media hay dữ liệu LocalApplicationData.
+
 ## Không tìm thấy yt-dlp, FFmpeg hoặc ffprobe
 
 1. Mở tab “Công cụ và cài đặt”.

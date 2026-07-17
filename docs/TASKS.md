@@ -36,6 +36,10 @@ Ngày cập nhật: 2026-07-17.
       nhận nguồn/GPLv3, SHA-256, giải nén chọn lọc và rollback theo cặp.
 - [x] Chặn updater khi metadata/download hoạt động và chặn download khi update.
 - [x] Thêm profile publish self-contained single-file win-x64.
+- [x] Đánh phiên bản sản phẩm đầu tiên `1.0.0` trong metadata assembly và changelog.
+- [x] Thêm MSI per-machine x64 với shortcut, uninstall, MajorUpgrade và upgrade
+      identity ổn định cho các phiên bản tương lai.
+- [x] Thêm script build installer cùng tài liệu cài đặt/phát hành/nâng cấp.
 - [x] Thêm tài liệu thiết lập và khắc phục sự cố cho sử dụng riêng.
 - [x] Nâng cấp giao diện WPF với hệ thống thiết kế sáng/tối, control template thống nhất
       và lựa chọn giao diện được nhớ sau khi khởi động lại.
@@ -48,7 +52,8 @@ Ngày cập nhật: 2026-07-17.
       sidecar và GPLv3 cho private-use; chưa chấp thuận bundle/phân phối lại.
 - [ ] Xác minh chữ ký/attestation độc lập và lập third-party notices trước phát hành rộng.
 - [ ] Quyết định có hỗ trợ `yt-dlp-ejs`/JavaScript runtime hay không.
-- [ ] Xác định phiên bản Windows tối thiểu và phương thức đóng gói/ký mã.
+- [x] Chọn MSI per-machine x64 làm phương thức đóng gói private-use.
+- [ ] Xác định phiên bản Windows tối thiểu và chứng thư/quy trình ký mã.
 - [ ] Hoàn thành threat model cho URL, đường dẫn, process, log và tệp tạm.
 - [x] Chính sách private-use: settings/history/log chỉ LocalApplicationData, không telemetry.
 
@@ -91,7 +96,11 @@ Ngày cập nhật: 2026-07-17.
 - [ ] Tạo kiểm thử tích hợp có fixture hợp pháp do dự án sở hữu.
 - [x] Thiết kế cập nhật/rollback yt-dlp và gói FFmpeg/ffprobe; không cập nhật ngầm.
 - [ ] Tạo SBOM, third-party notices và quy trình rà soát security advisory.
-- [ ] Xác minh đóng gói sạch không chứa binary chưa phê duyệt.
+- [x] Xác minh bảng File của MSI 1.0.0 chỉ chứa executable ứng dụng self-contained;
+      không có binary công cụ ngoài hoặc dữ liệu người dùng.
+- [ ] Chạy ICE validation đầy đủ và cài mới/nâng cấp/hạ cấp/gỡ MSI trên Windows sạch.
+- [ ] Ký Authenticode executable và MSI, sau đó kiểm tra Defender/SmartScreen.
+- [ ] Lập kế hoạch chuyển WiX v3.11 đã hết hỗ trợ sang phiên bản còn được hỗ trợ.
 - [ ] Bổ sung xác minh chữ ký GPG/release attestation cho checksum nếu phát hành rộng.
 - [ ] Smoke test gói self-contained trên Windows sạch, Defender/SmartScreen và DPI.
 

@@ -181,6 +181,7 @@ Ngày rà soát ban đầu: 2026-07-17. Đây không phải tư vấn pháp lý.
 | [FFmpeg/ffprobe](https://ffmpeg.org/legal.html) | Kiểm tra, ghép và chuyển đổi media | Updater private-use tải thủ công gói Release Essentials x64 từ gyan.dev; không bundle | Gyan công bố mọi build của họ là GPLv3; gói thực tế gồm nhiều thư viện/codec. Cần giữ nguồn, phiên bản, checksum và cấu hình build nếu phân phối lại; codec có thể kéo theo cân nhắc bằng sáng chế tùy nơi phân phối. |
 | [xUnit.net](https://xunit.net/) | Kiểm thử | Package phát triển | Apache License 2.0. Không phân phối trong sản phẩm runtime. |
 | `Microsoft.NET.Test.Sdk`, `coverlet.collector`, runner xUnit | Chạy/đo kiểm thử | Package phát triển | Khóa phiên bản trong project; xác minh giấy phép và security advisory khi nâng cấp. Không phân phối trong sản phẩm runtime. |
+| [WiX Toolset v3.11](https://github.com/wixtoolset/wix3) | Biên dịch gói MSI x64 | Chỉ dùng trên máy build; không nhúng vào MSI | Microsoft Reciprocal License. WiX v3 đã hết hỗ trợ cộng đồng và kho nguồn đã lưu trữ; cần lập kế hoạch chuyển sang phiên bản còn được hỗ trợ, giữ nguyên UpgradeCode và kiểm thử nâng cấp. |
 
 README chính thức của yt-dlp hiện cũng nêu JavaScript runtime/engine và `yt-dlp-ejs` là cần thiết cho hỗ trợ YouTube đầy đủ. Chưa dependency nào trong nhóm này được chấp thuận hoặc tải; đây là quyết định kiến trúc và giấy phép còn mở.
 
@@ -208,7 +209,25 @@ WPF và extract native library khi cần. Output mặc định là
 `artifacts/publish/win-x64`. Profile không copy thư mục `%LOCALAPPDATA%`, tools,
 log, history, settings hay media.
 
-## 9. Quyết định kiến trúc đã ghi nhận
+## 9. Đóng gói MSI và phiên bản
+
+`Directory.Build.props` là nguồn phiên bản duy nhất cho assembly và MSI; dòng
+phát hành đầu tiên là `1.0.0`. `installer/Product.wxs` tạo gói per-machine x64
+vào Program Files, shortcut Start Menu/Desktop và mục gỡ cài đặt. MSI chỉ có
+single-file executable từ publish; công cụ ngoài và LocalApplicationData nằm
+ngoài quyền sở hữu của Windows Installer.
+
+`UpgradeCode` và GUID component được giữ ổn định giữa các phiên bản. ProductCode
+và PackageCode được tạo lại ở mỗi build. `MajorUpgrade` thay bản cũ khi tăng một
+trong ba phần `MAJOR.MINOR.PATCH` và chặn downgrade. Không phát hành hai MSI khác
+nhau với cùng ProductVersion vì Windows Installer chỉ so sánh ba phần này.
+
+Build hiện dùng WiX v3.11 cài ngoài repository. Script mặc định chạy ICE; tùy
+chọn `-SkipMsiValidation` chỉ dành cho môi trường hạn chế và artifact phải được
+kiểm tra lại trên Windows Installer thực trước khi phát hành. Executable phải
+được ký trước khi đóng gói, sau đó ký MSI; phiên bản 1.0.0 hiện chưa ký.
+
+## 10. Quyết định kiến trúc đã ghi nhận
 
 - ADR tạm thời 001: dùng WPF + MVVM trên .NET 10, Windows x64.
 - ADR tạm thời 002: Core thuần .NET, không phụ thuộc hạ tầng.
@@ -219,10 +238,12 @@ log, history, settings hay media.
   yêu cầu, có checksum và rollback; FFmpeg cần xác nhận nguồn/GPLv3 trước mỗi lần.
 - ADR tạm thời 007: dùng bảng màu WPF nội bộ và `DynamicResource`, không thêm UI framework
   bên thứ ba; lựa chọn sáng/tối được nhớ trong LocalApplicationData.
+- ADR tạm thời 008: private-use dùng MSI per-machine x64 với UpgradeCode ổn định;
+  gỡ/nâng cấp ứng dụng không sở hữu hoặc xóa LocalApplicationData và media.
 
 Các ADR trên cần tách thành tài liệu riêng nếu phạm vi hoặc nhóm phát triển mở rộng.
 
-## 10. Rủi ro kiến trúc còn lại
+## 11. Rủi ro kiến trúc còn lại
 
 - Output/progress của `yt-dlp` thay đổi giữa các phiên bản; cần ưu tiên JSON/mẫu có version thay vì parse văn bản tự do.
 - Adapter hiện dựa vào `%(progress)j` và các field JSON của `--dump-single-json`;
@@ -243,3 +264,7 @@ Các ADR trên cần tách thành tài liệu riêng nếu phạm vi hoặc nhó
 - Logger dùng redaction theo mẫu; chuỗi secret có định dạng mới vẫn có thể lọt qua.
 - Self-contained single-file và updater cần smoke test trên Windows sạch, Defender,
   SmartScreen và thư mục có chính sách bảo vệ thực tế.
+- MSI 1.0.0 và executable chưa ký; chưa chạy ICE thành công trong môi trường build
+  hạn chế và chưa kiểm tra cài mới/nâng cấp/hạ cấp/gỡ cài đặt trên máy Windows sạch.
+- WiX v3.11 đã hết hỗ trợ; việc chuyển phiên bản công cụ có thể làm thay đổi output
+  MSI và phải được kiểm thử mà không phá vỡ upgrade identity.
