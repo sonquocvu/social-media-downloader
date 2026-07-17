@@ -93,7 +93,9 @@ public sealed class JsonApplicationSettingsStore(
             QualityPreset.Video1080p or
             QualityPreset.Video720p or
             QualityPreset.Video480p or
-            QualityPreset.AudioMp3;
+            QualityPreset.AudioMp3 &&
+        Enum.IsDefined(settings.Theme) &&
+        settings.Theme is ApplicationTheme.Light or ApplicationTheme.Dark;
 
     private static bool IsStorageException(Exception exception) =>
         exception is IOException or

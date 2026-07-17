@@ -179,6 +179,19 @@ internal sealed class FakeDiagnosticLogger : IDiagnosticLogger
     }
 }
 
+internal sealed class FakeThemeService : IThemeService
+{
+    public ApplicationTheme CurrentTheme { get; private set; } = ApplicationTheme.Light;
+
+    public List<ApplicationTheme> AppliedThemes { get; } = [];
+
+    public void Apply(ApplicationTheme theme)
+    {
+        CurrentTheme = theme;
+        AppliedThemes.Add(theme);
+    }
+}
+
 internal static class TestData
 {
     public const string OutputFolder = @"C:\Video";
@@ -215,7 +228,9 @@ internal static class TestData
         FakeFileActionService? files = null,
         FakeUserDataService? userData = null,
         FakeToolManagementService? tools = null,
-        QualityPreset defaultQuality = QualityPreset.Best) =>
+        FakeThemeService? themes = null,
+        QualityPreset defaultQuality = QualityPreset.Best,
+        ApplicationTheme defaultTheme = ApplicationTheme.Light) =>
         new(
             metadata ?? new FakeMetadataProvider(),
             downloads ?? new FakeDownloadCoordinator(),
@@ -224,6 +239,7 @@ internal static class TestData
             new ImmediateDispatcher(),
             userData ?? new FakeUserDataService(),
             tools ?? new FakeToolManagementService(),
+            themes ?? new FakeThemeService(),
             new FakeDiagnosticLogger(),
-            new AppUiOptions(OutputFolder, defaultQuality));
+            new AppUiOptions(OutputFolder, defaultQuality, defaultTheme));
 }

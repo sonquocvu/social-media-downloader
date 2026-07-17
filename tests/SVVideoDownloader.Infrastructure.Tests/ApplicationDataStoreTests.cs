@@ -29,13 +29,15 @@ public sealed class ApplicationDataStoreTests
             logger);
         var expected = new ApplicationSettings(
             Path.Combine(directory.Path, "video"),
-            QualityPreset.Video1080p);
+            QualityPreset.Video1080p,
+            ApplicationTheme.Dark);
 
         await store.SaveAsync(expected);
         var loaded = await store.LoadAsync(
             new ApplicationSettings(directory.Path, QualityPreset.Best));
 
         Assert.Equal(expected, loaded);
+        Assert.Equal(ApplicationTheme.Dark, loaded.Theme);
         Assert.DoesNotContain(".tmp", Directory.GetFiles(directory.Path).Single());
     }
 
@@ -55,6 +57,30 @@ public sealed class ApplicationDataStoreTests
         Assert.DoesNotContain(
             logger.Messages,
             message => message.Contains("private-secret", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task SettingsWithoutThemeMigrateToLightTheme()
+    {
+        using var directory = new TemporaryTestDirectory();
+        var settingsPath = Path.Combine(directory.Path, "settings.json");
+        await File.WriteAllTextAsync(
+            settingsPath,
+            $$"""
+            {
+              "DownloadDirectory": "{{directory.Path.Replace("\\", "\\\\", StringComparison.Ordinal)}}",
+              "DefaultQuality": "Video720p"
+            }
+            """);
+        using var store = new JsonApplicationSettingsStore(
+            settingsPath,
+            new RecordingDiagnosticLogger());
+
+        var loaded = await store.LoadAsync(
+            new ApplicationSettings(directory.Path, QualityPreset.Best));
+
+        Assert.Equal(ApplicationTheme.Light, loaded.Theme);
+        Assert.Equal(QualityPreset.Video720p, loaded.DefaultQuality);
     }
 
     [Fact]

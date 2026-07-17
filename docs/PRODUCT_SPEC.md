@@ -67,6 +67,8 @@ tệp trùng và phân phối binary vẫn phải được phê duyệt trước
 - FR-12: Hiển thị availability, version và path của yt-dlp/FFmpeg/ffprobe.
 - FR-13: Chỉ cập nhật yt-dlp khi người dùng yêu cầu; không chạy song song với
   download/metadata; xác minh checksum/executable và rollback khi hậu kiểm thất bại.
+- FR-14: Cho phép chuyển giao diện sáng/tối tức thời và nhớ lựa chọn dưới
+  LocalApplicationData mà không khởi động lại ứng dụng.
 
 ## 7. Yêu cầu phi chức năng
 
@@ -77,6 +79,8 @@ tệp trùng và phân phối binary vẫn phải được phê duyệt trước
 - NFR-05: Không ghép shell command từ dữ liệu người dùng.
 - NFR-06: Mọi thông báo hiển thị cho người dùng phải bằng tiếng Việt.
 - NFR-07: Bản publish self-contained win-x64 không chứa binary media hoặc dữ liệu cá nhân.
+- NFR-08: Cả hai bảng màu phải giữ nhãn accessibility, focus bàn phím, độ tương phản dễ đọc
+  và bố cục cuộn được khi phóng to giao diện.
 
 ## 8. Tiêu chí hoàn thành khung ban đầu
 

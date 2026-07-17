@@ -1,7 +1,9 @@
 using SVVideoDownloader.Core.Videos;
+using SVVideoDownloader.Infrastructure.ApplicationData;
 
 namespace SVVideoDownloader.App.Services;
 
 public sealed record AppUiOptions(
     string DefaultOutputFolder,
-    QualityPreset DefaultQuality);
+    QualityPreset DefaultQuality,
+    ApplicationTheme DefaultTheme = ApplicationTheme.Light);

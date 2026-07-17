@@ -4,4 +4,5 @@ namespace SVVideoDownloader.Infrastructure.ApplicationData;
 
 public sealed record ApplicationSettings(
     string DownloadDirectory,
-    QualityPreset DefaultQuality);
+    QualityPreset DefaultQuality,
+    ApplicationTheme Theme = ApplicationTheme.Light);

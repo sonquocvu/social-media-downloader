@@ -14,6 +14,8 @@ public partial class MainWindow : Window
         ViewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         InitializeComponent();
         DataContext = ViewModel;
+        SourceInitialized += OnSourceInitialized;
+        ViewModel.PropertyChanged += OnViewModelPropertyChanged;
     }
 
     public MainWindowViewModel ViewModel { get; }
@@ -64,7 +66,7 @@ public partial class MainWindow : Window
         {
             await ViewModel.PrepareForCloseAsync();
             _closeApproved = true;
-            Close();
+            _ = Dispatcher.BeginInvoke(new Action(Close));
         }
         catch (Exception)
         {
@@ -80,7 +82,20 @@ public partial class MainWindow : Window
 
     protected override void OnClosed(EventArgs e)
     {
+        SourceInitialized -= OnSourceInitialized;
+        ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
         ViewModel.Dispose();
         base.OnClosed(e);
+    }
+
+    private void OnSourceInitialized(object? sender, EventArgs e) =>
+        NativeWindowTheme.Apply(this, ViewModel.IsDarkMode);
+
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MainWindowViewModel.IsDarkMode))
+        {
+            NativeWindowTheme.Apply(this, ViewModel.IsDarkMode);
+        }
     }
 }

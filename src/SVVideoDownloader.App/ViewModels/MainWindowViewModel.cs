@@ -20,6 +20,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     private readonly IUiDispatcher _uiDispatcher;
     private readonly IUserDataService _userDataService;
     private readonly IToolManagementService _toolManagementService;
+    private readonly IThemeService _themeService;
     private readonly IDiagnosticLogger _logger;
     private readonly object _settingsSync = new();
     private readonly object _historyTasksSync = new();
@@ -42,6 +43,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         "Dán liên kết video công khai từ YouTube, TikTok hoặc Facebook để bắt đầu.";
     private bool _isRefreshingTools;
     private bool _isUpdatingYtDlp;
+    private bool _isDarkMode;
     private bool _isInitialized;
     private bool _disposed;
 
@@ -53,6 +55,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         IUiDispatcher uiDispatcher,
         IUserDataService userDataService,
         IToolManagementService toolManagementService,
+        IThemeService themeService,
         IDiagnosticLogger logger,
         AppUiOptions options)
     {
@@ -68,6 +71,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         _userDataService = userDataService ?? throw new ArgumentNullException(nameof(userDataService));
         _toolManagementService = toolManagementService ??
             throw new ArgumentNullException(nameof(toolManagementService));
+        _themeService = themeService ?? throw new ArgumentNullException(nameof(themeService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         ArgumentNullException.ThrowIfNull(options);
         ArgumentException.ThrowIfNullOrWhiteSpace(options.DefaultOutputFolder);
@@ -83,6 +87,8 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         ];
         _selectedQuality = QualityOptions.FirstOrDefault(item => item.Preset == options.DefaultQuality)
             ?? QualityOptions[0];
+        _themeService.Apply(options.DefaultTheme);
+        _isDarkMode = options.DefaultTheme == ApplicationTheme.Dark;
         ToolStatuses =
         [
             new(ExternalToolKind.YtDlp),
@@ -96,6 +102,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         ClearHistoryCommand = new AsyncRelayCommand(ClearHistoryAsync, () => CanClearHistory);
         RefreshToolsCommand = new AsyncRelayCommand(RefreshToolsAsync, () => CanRefreshTools);
         UpdateYtDlpCommand = new AsyncRelayCommand(UpdateYtDlpAsync, () => CanUpdateYtDlp);
+        ToggleThemeCommand = new RelayCommand(ToggleTheme);
     }
 
     public string VideoUrl
@@ -324,6 +331,16 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     public AsyncRelayCommand RefreshToolsCommand { get; }
 
     public AsyncRelayCommand UpdateYtDlpCommand { get; }
+
+    public RelayCommand ToggleThemeCommand { get; }
+
+    public bool IsDarkMode => _isDarkMode;
+
+    public string ThemeToggleText => IsDarkMode ? "Chế độ sáng" : "Chế độ tối";
+
+    public string ThemeStatusText => IsDarkMode
+        ? "Đang dùng giao diện tối"
+        : "Đang dùng giao diện sáng";
 
     public async Task InitializeAsync()
     {
@@ -698,11 +715,25 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        var settings = new ApplicationSettings(OutputFolder, SelectedQuality.Preset);
+        var settings = new ApplicationSettings(
+            OutputFolder,
+            SelectedQuality.Preset,
+            IsDarkMode ? ApplicationTheme.Dark : ApplicationTheme.Light);
         lock (_settingsSync)
         {
             _settingsSaveTask = SaveSettingsAfterAsync(_settingsSaveTask, settings);
         }
+    }
+
+    private void ToggleTheme()
+    {
+        var theme = IsDarkMode ? ApplicationTheme.Light : ApplicationTheme.Dark;
+        _themeService.Apply(theme);
+        _isDarkMode = theme == ApplicationTheme.Dark;
+        OnPropertyChanged(nameof(IsDarkMode));
+        OnPropertyChanged(nameof(ThemeToggleText));
+        OnPropertyChanged(nameof(ThemeStatusText));
+        QueueSettingsSave();
     }
 
     private async Task SaveSettingsAfterAsync(Task previousSave, ApplicationSettings settings)

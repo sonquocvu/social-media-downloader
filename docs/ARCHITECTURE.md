@@ -63,6 +63,12 @@ SVVideoDownloader.Core <--- SVVideoDownloader.Infrastructure
   trong lúc updater giữ lease độc quyền.
 - ViewModel nạp/lưu cài đặt, lịch sử, trạng thái công cụ và chờ các write đang chạy
   trước khi cửa sổ đóng.
+- `WpfThemeService` thay bảng màu ResourceDictionary ở runtime; control template dùng
+  `DynamicResource` nên cửa sổ chuyển sáng/tối tức thời mà không tạo lại ViewModel.
+- Hai bảng màu và control template nằm trong `Themes`; lệnh đổi giao diện thuộc ViewModel,
+  còn thao tác tài nguyên WPF được cô lập sau `IThemeService`.
+- Trên Windows 11 build 22000 trở lên, code-behind đồng bộ thanh tiêu đề native bằng
+  `DWMWA_USE_IMMERSIVE_DARK_MODE`; đây là view concern và không đi vào Core/Infrastructure.
 
 ### Kiểm thử
 
@@ -163,7 +169,8 @@ Trước khi thêm binary, cần lập hồ sơ gồm tên artifact, URL nguồn
 
 - Không hard-code đường dẫn tuyệt đối trên máy phát triển.
 - Root dữ liệu lấy từ `Environment.SpecialFolder.LocalApplicationData`.
-- `settings.json` chỉ lưu thư mục output tuyệt đối và enum chất lượng mặc định.
+- `settings.json` chỉ lưu thư mục output tuyệt đối, enum chất lượng mặc định và lựa chọn
+  giao diện sáng/tối; tệp cũ thiếu trường giao diện mặc định được đọc như giao diện sáng.
 - `history.json` chỉ lưu tác vụ hoàn tất; không lưu URL nguồn, cookie hoặc stderr.
 - Save JSON dùng tệp tạm duy nhất và move-overwrite trong cùng thư mục.
 - Không lưu credential trong tệp cấu hình thường.
@@ -186,6 +193,8 @@ log, history, settings hay media.
 - ADR tạm thời 005: dữ liệu riêng nằm trong LocalApplicationData; không telemetry.
 - ADR tạm thời 006: chỉ cập nhật yt-dlp thủ công, có checksum và rollback; FFmpeg
   vẫn được cung cấp thủ công.
+- ADR tạm thời 007: dùng bảng màu WPF nội bộ và `DynamicResource`, không thêm UI framework
+  bên thứ ba; lựa chọn sáng/tối được nhớ trong LocalApplicationData.
 
 Các ADR trên cần tách thành tài liệu riêng nếu phạm vi hoặc nhóm phát triển mở rộng.
 

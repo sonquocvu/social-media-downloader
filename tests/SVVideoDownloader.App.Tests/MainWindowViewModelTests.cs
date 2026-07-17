@@ -33,6 +33,36 @@ public sealed class MainWindowViewModelTests
     }
 
     [Fact]
+    public void InitialState_UsesRememberedDarkTheme()
+    {
+        var themes = new FakeThemeService();
+        using var viewModel = TestData.CreateMainViewModel(
+            themes: themes,
+            defaultTheme: ApplicationTheme.Dark);
+
+        Assert.True(viewModel.IsDarkMode);
+        Assert.Equal("Chế độ sáng", viewModel.ThemeToggleText);
+        Assert.Equal(ApplicationTheme.Dark, themes.CurrentTheme);
+    }
+
+    [Fact]
+    public async Task ToggleTheme_AppliesAndPersistsDarkTheme()
+    {
+        var themes = new FakeThemeService();
+        var userData = new FakeUserDataService();
+        using var viewModel = TestData.CreateMainViewModel(
+            userData: userData,
+            themes: themes);
+
+        viewModel.ToggleThemeCommand.Execute(null);
+        await viewModel.PrepareForCloseAsync();
+
+        Assert.True(viewModel.IsDarkMode);
+        Assert.Equal(ApplicationTheme.Dark, themes.CurrentTheme);
+        Assert.Equal(ApplicationTheme.Dark, Assert.Single(userData.SavedSettings).Theme);
+    }
+
+    [Fact]
     public async Task Initialize_LoadsHistoryAndToolStatuses()
     {
         var userData = new FakeUserDataService();

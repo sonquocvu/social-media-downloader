@@ -85,6 +85,44 @@ public sealed class YtDlpUpdateServiceTests
         Assert.Equal(original, await File.ReadAllTextAsync(options.YtDlpPath));
     }
 
+    [Fact]
+    public async Task ExclusiveWindowsFileLockLeavesExistingExecutableUntouched()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var directory = new TemporaryTestDirectory();
+        var options = CreateOptions(directory.Path);
+        const string original = "existing locked executable";
+        await File.WriteAllTextAsync(options.YtDlpPath, original);
+        var downloader = new FakeDownloadClient("new executable"u8.ToArray());
+        var status = new FakeToolStatusService(
+            Available(options.YtDlpPath, "2026.07.17"));
+        var service = new YtDlpUpdateService(
+            options,
+            downloader,
+            status,
+            new NullLogger());
+
+        YtDlpUpdateResult result;
+        await using (var lockedFile = new FileStream(
+                         options.YtDlpPath,
+                         FileMode.Open,
+                         FileAccess.Read,
+                         FileShare.None))
+        {
+            result = await service.UpdateAsync();
+        }
+
+        Assert.Equal(YtDlpUpdateStatus.ReplacementFailed, result.Status);
+        Assert.Equal(original, await File.ReadAllTextAsync(options.YtDlpPath));
+        Assert.DoesNotContain(
+            Directory.GetFiles(directory.Path),
+            path => Path.GetFileName(path).StartsWith(".yt-dlp", StringComparison.Ordinal));
+    }
+
     private static ExternalToolOptions CreateOptions(string toolsDirectory) =>
         ExternalToolOptions.CreateForToolsDirectory(toolsDirectory, toolsDirectory);
 

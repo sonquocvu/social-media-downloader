@@ -42,8 +42,13 @@ public partial class App : Application
             var defaultOutputFolder = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
                 "Downloads");
-            var defaults = new ApplicationSettings(defaultOutputFolder, QualityPreset.Best);
+            var defaults = new ApplicationSettings(
+                defaultOutputFolder,
+                QualityPreset.Best,
+                ApplicationTheme.Light);
             var settings = await _settingsStore.LoadAsync(defaults);
+            var themeService = new WpfThemeService(this);
+            themeService.Apply(settings.Theme);
             var externalToolOptions = ExternalToolOptions.CreateForToolsDirectory(
                 paths.ToolsDirectory,
                 settings.DownloadDirectory);
@@ -52,7 +57,9 @@ public partial class App : Application
             services.AddSingleton(paths);
             services.AddSingleton(new AppUiOptions(
                 settings.DownloadDirectory,
-                settings.DefaultQuality));
+                settings.DefaultQuality,
+                settings.Theme));
+            services.AddSingleton<IThemeService>(themeService);
             services.AddSingleton<IApplicationSettingsStore>(_settingsStore);
             services.AddSingleton<IDownloadHistoryStore>(_historyStore);
             services.AddSingleton<IDiagnosticLogger>(_logger);

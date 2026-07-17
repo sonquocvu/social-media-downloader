@@ -49,6 +49,8 @@ cần cài .NET runtime riêng. Xem [thiết lập Windows](docs/SETUP.md) và
 - Theo dõi hàng đợi, phần trăm, dung lượng đã tải, tốc độ và thời gian còn lại.
 - Hủy, thử lại, xóa mục hoàn tất, mở tệp và mở thư mục.
 - Xác nhận bằng tiếng Việt khi đóng cửa sổ trong lúc còn tác vụ hoạt động.
+- Giao diện sáng/tối đồng bộ, có nút chuyển nhanh và nhớ lựa chọn sau khi khởi động lại.
+- Hệ thống thiết kế WPF riêng với thẻ bo góc, trạng thái tương phản rõ và điều hướng bàn phím.
 - Nhớ thư mục tải và chất lượng mặc định trong `%LOCALAPPDATA%`.
 - Lưu tối đa 500 tác vụ hoàn tất; xóa lịch sử không xóa media.
 - Kiểm tra trạng thái/phiên bản yt-dlp, FFmpeg và ffprobe.
@@ -74,7 +76,7 @@ Xem [đặc tả sản phẩm](docs/PRODUCT_SPEC.md), [kiến trúc](docs/ARCHIT
 
 Ứng dụng dùng `%LOCALAPPDATA%\SVVideoDownloader`:
 
-- `settings.json`: thư mục tải và chất lượng mặc định.
+- `settings.json`: thư mục tải, chất lượng mặc định và giao diện sáng/tối.
 - `history.json`: lịch sử tác vụ hoàn tất, không chứa cookie.
 - `logs`: nhật ký chẩn đoán xoay vòng, có che cookie/secret/token/URL.
 - `tools`: executable ngoài do người dùng thiết lập hoặc yt-dlp được cập nhật thủ công.

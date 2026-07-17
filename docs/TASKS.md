@@ -35,6 +35,8 @@ Ngày cập nhật: 2026-07-17.
 - [x] Chặn updater khi metadata/download hoạt động và chặn download khi update.
 - [x] Thêm profile publish self-contained single-file win-x64.
 - [x] Thêm tài liệu thiết lập và khắc phục sự cố cho sử dụng riêng.
+- [x] Nâng cấp giao diện WPF với hệ thống thiết kế sáng/tối, control template thống nhất
+      và lựa chọn giao diện được nhớ sau khi khởi động lại.
 
 ## P0 — quyết định trước khi triển khai tải
 
@@ -72,6 +74,7 @@ Ngày cập nhật: 2026-07-17.
 - [x] Thêm nhãn accessibility, access key, thứ tự bàn phím, cuộn và bố cục co giãn
       cơ bản cho mức 125%/150%.
 - [x] Không đưa stderr, URL, cookie hoặc secret vào thông báo giao diện.
+- [x] Thêm bảng màu sáng/tối, nút chuyển giao diện bằng tiếng Việt và kiểm thử ViewModel/XAML.
 - [ ] Kiểm thử thủ công với screen reader, high contrast và DPI 125%/150% trên
       các phiên bản Windows tối thiểu sau khi quyết định phạm vi hỗ trợ.
 - [ ] Quyết định chính sách xử lý tệp trùng tên và ghi đè trước khi phát hành.
