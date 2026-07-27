@@ -1,8 +1,8 @@
 # Thiết lập riêng trên Windows
 
-## Cài phiên bản 1.0.0 bằng MSI
+## Cài phiên bản 1.1.0 bằng MSI
 
-1. Lấy `SVVideoDownloader-1.0.0-win-x64.msi` từ kênh tin cậy và kiểm tra SHA-256
+1. Lấy `SVVideoDownloader-1.1.0-win-x64.msi` từ kênh tin cậy và kiểm tra SHA-256
    theo ghi chú phát hành.
 2. Mở MSI và chấp nhận yêu cầu quyền quản trị. Ứng dụng được cài vào
    `%ProgramFiles%\SVVideoDownloader`.
@@ -11,7 +11,7 @@
 
 MSI là self-contained win-x64 nên máy sử dụng không cần cài .NET runtime. Gói
 không chứa yt-dlp, FFmpeg, ffprobe, media, settings, history, log hoặc secret.
-MSI/executable 1.0.0 chưa được ký mã nên Defender/SmartScreen có thể cảnh báo;
+MSI/executable 1.1.0 chưa được ký mã nên Defender/SmartScreen có thể cảnh báo;
 không bỏ qua cảnh báo nếu nguồn hoặc checksum không đáng tin cậy.
 
 Gỡ ứng dụng trong Windows Settings sẽ xóa executable và shortcut nhưng không xóa

@@ -4,7 +4,7 @@ SVVideoDownloader là ứng dụng WPF riêng tư bằng tiếng Việt dành ch
 Ứng dụng tải tệp Video hoặc MP3 từ nội dung công khai do người dùng sở hữu hoặc
 được cho phép tải trên YouTube, TikTok và Facebook.
 
-Phiên bản hiện tại: **1.0.0**.
+Phiên bản hiện tại: **1.1.0**.
 
 > Trạng thái hiện tại: đã sẵn sàng để thử nghiệm sử dụng riêng hằng ngày trên
 > Windows x64. Ứng dụng có cài đặt được nhớ, lịch sử tải, nhật ký chẩn đoán xoay
@@ -46,12 +46,12 @@ Gói self-contained được tạo tại `artifacts/publish/win-x64`. Máy sử 
 cần cài .NET runtime riêng. Xem [thiết lập Windows](docs/SETUP.md) và
 [khắc phục sự cố](docs/TROUBLESHOOTING.md).
 
-## Cài đặt phiên bản 1.0.0
+## Cài đặt phiên bản 1.1.0
 
 Gói cài đặt x64 được tạo tại:
 
 ```text
-artifacts\installer\SVVideoDownloader-1.0.0-win-x64.msi
+artifacts\installer\SVVideoDownloader-1.1.0-win-x64.msi
 ```
 
 Mở MSI và chấp nhận yêu cầu quyền quản trị để cài vào Program Files. Gói tạo
@@ -59,7 +59,7 @@ shortcut ở Start Menu và Desktop, hỗ trợ gỡ cài đặt trong Windows S
 không yêu cầu .NET runtime riêng. yt-dlp, FFmpeg và ffprobe không nằm trong MSI;
 cài chúng thủ công từ màn hình “Công cụ và cài đặt” sau lần chạy đầu tiên.
 
-MSI/executable 1.0.0 hiện chưa được ký mã nên Defender hoặc SmartScreen có thể
+MSI/executable 1.1.0 hiện chưa được ký mã nên Defender hoặc SmartScreen có thể
 cảnh báo. Chỉ dùng artifact do bạn tự build hoặc nhận qua kênh tin cậy và kiểm
 tra SHA-256 trước khi chạy. Xem [quy trình phát hành](docs/RELEASING.md) và
 [nhật ký thay đổi](CHANGELOG.md) để tạo phiên bản mới.

@@ -1,6 +1,6 @@
 # Danh sách công việc
 
-Ngày cập nhật: 2026-07-26.
+Ngày cập nhật: 2026-07-27.
 
 ## Hoàn thành trong khung ban đầu
 
@@ -49,6 +49,12 @@ Ngày cập nhật: 2026-07-26.
       `--audio-quality 0` không được áp dụng cho tải Video.
 - [x] Xếp dọc các thẻ quản lý yt-dlp/FFmpeg và tắt cuộn ngang trên trang Công cụ
       và cài đặt.
+- [x] Sửa thư mục và kiểu shortcut MSI theo máy để vượt qua ICE38/ICE43/ICE57.
+- [x] Đánh phiên bản 1.1.0, tạo publish self-contained và MSI x64; xác minh
+      ProductVersion, UpgradeCode, bảng File, SHA-256 và chạy ICE thành công.
+- [x] Đối chiếu MSI 1.0.0/1.1.0 và registration đang cài: giữ UpgradeCode,
+      install scope, feature/component GUID; dùng ProductCode mới và
+      `RemoveExistingProducts` trước `InstallFiles` để hỗ trợ nâng cấp.
 
 ## P0 — quyết định trước khi triển khai tải
 
@@ -104,6 +110,8 @@ Ngày cập nhật: 2026-07-26.
 - [ ] Tạo SBOM, third-party notices và quy trình rà soát security advisory.
 - [x] Xác minh bảng File của MSI 1.0.0 chỉ chứa executable ứng dụng self-contained;
       không có binary công cụ ngoài hoặc dữ liệu người dùng.
+- [x] Xác minh bảng File của MSI 1.1.0 chỉ chứa executable ứng dụng self-contained;
+      giữ UpgradeCode và vượt qua kiểm tra ICE.
 - [ ] Chạy ICE validation đầy đủ và cài mới/nâng cấp/hạ cấp/gỡ MSI trên Windows sạch.
 - [ ] Ký Authenticode executable và MSI, sau đó kiểm tra Defender/SmartScreen.
 - [ ] Lập kế hoạch chuyển WiX v3.11 đã hết hỗ trợ sang phiên bản còn được hỗ trợ.

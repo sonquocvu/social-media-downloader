@@ -227,11 +227,14 @@ ngoài quyền sở hữu của Windows Installer.
 và PackageCode được tạo lại ở mỗi build. `MajorUpgrade` thay bản cũ khi tăng một
 trong ba phần `MAJOR.MINOR.PATCH` và chặn downgrade. Không phát hành hai MSI khác
 nhau với cùng ProductVersion vì Windows Installer chỉ so sánh ba phần này.
+Shortcut theo máy dùng `CommonProgramsFolder` và `CommonDesktopFolder`, đồng
+thời được quảng bá qua Windows Installer để không trộn dữ liệu theo người dùng
+với component có KeyPath theo máy.
 
 Build hiện dùng WiX v3.11 cài ngoài repository. Script mặc định chạy ICE; tùy
 chọn `-SkipMsiValidation` chỉ dành cho môi trường hạn chế và artifact phải được
 kiểm tra lại trên Windows Installer thực trước khi phát hành. Executable phải
-được ký trước khi đóng gói, sau đó ký MSI; phiên bản 1.0.0 hiện chưa ký.
+được ký trước khi đóng gói, sau đó ký MSI; phiên bản 1.1.0 hiện chưa ký.
 
 ## 10. Quyết định kiến trúc đã ghi nhận
 
@@ -270,7 +273,7 @@ Các ADR trên cần tách thành tài liệu riêng nếu phạm vi hoặc nhó
 - Logger dùng redaction theo mẫu; chuỗi secret có định dạng mới vẫn có thể lọt qua.
 - Self-contained single-file và updater cần smoke test trên Windows sạch, Defender,
   SmartScreen và thư mục có chính sách bảo vệ thực tế.
-- MSI 1.0.0 và executable chưa ký; chưa chạy ICE thành công trong môi trường build
-  hạn chế và chưa kiểm tra cài mới/nâng cấp/hạ cấp/gỡ cài đặt trên máy Windows sạch.
+- MSI 1.1.0 và executable chưa ký; ICE đã chạy thành công, nhưng chưa kiểm tra cài
+  mới/nâng cấp/hạ cấp/gỡ cài đặt trên máy Windows sạch.
 - WiX v3.11 đã hết hỗ trợ; việc chuyển phiên bản công cụ có thể làm thay đổi output
   MSI và phải được kiểm thử mà không phá vỡ upgrade identity.

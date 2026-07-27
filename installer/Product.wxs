@@ -26,18 +26,18 @@
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
 
     <Icon
-      Id="AppIcon"
+      Id="AppIcon.exe"
       SourceFile="$(var.RepositoryRoot)\src\SVVideoDownloader.App\Assets\SVVideoDownloader.ico" />
-    <Property Id="ARPPRODUCTICON" Value="AppIcon" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon.exe" />
 
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="ProgramFiles64Folder">
         <Directory Id="INSTALLFOLDER" Name="SVVideoDownloader" />
       </Directory>
-      <Directory Id="ProgramMenuFolder">
+      <Directory Id="CommonProgramsFolder">
         <Directory Id="ApplicationProgramsFolder" Name="SV Video Downloader" />
       </Directory>
-      <Directory Id="DesktopFolder" />
+      <Directory Id="CommonDesktopFolder" />
     </Directory>
 
     <DirectoryRef Id="INSTALLFOLDER">
@@ -57,16 +57,16 @@
             Name="SV Video Downloader"
             Description="Tải video công khai được phép"
             WorkingDirectory="INSTALLFOLDER"
-            Icon="AppIcon"
-            Advertise="no" />
+            Icon="AppIcon.exe"
+            Advertise="yes" />
           <Shortcut
             Id="DesktopShortcut"
-            Directory="DesktopFolder"
+            Directory="CommonDesktopFolder"
             Name="SV Video Downloader"
             Description="Tải video công khai được phép"
             WorkingDirectory="INSTALLFOLDER"
-            Icon="AppIcon"
-            Advertise="no" />
+            Icon="AppIcon.exe"
+            Advertise="yes" />
         </File>
       </Component>
     </DirectoryRef>
