@@ -57,6 +57,10 @@ SVVideoDownloader.Core <--- SVVideoDownloader.Infrastructure
   và implementation Infrastructure.
 - Có màn hình phân tích, tùy chọn tải và hàng đợi. Thao tác filesystem/process từ
   ViewModel đi qua dịch vụ bất đồng bộ; hộp thoại xác nhận đóng cửa sổ vẫn là view concern.
+- Giao diện tách lựa chọn loại tệp Video/MP3 khỏi chất lượng video. ViewModel ánh
+  xạ lựa chọn MP3 sang preset Core `AudioMp3`; Infrastructure chuyển preset này
+  thành `--extract-audio --audio-format mp3 --audio-quality 0`, không đưa cú pháp
+  `yt-dlp` vào App/Core.
 - `DownloadCoordinator` tạo cấu hình Infrastructure theo thư mục đích của từng tác
   vụ mà không đưa khái niệm filesystem vào Core.
 - `EngineOperationGate` loại trừ cập nhật engine với metadata/download; updater
@@ -68,6 +72,8 @@ SVVideoDownloader.Core <--- SVVideoDownloader.Infrastructure
   `DynamicResource` nên cửa sổ chuyển sáng/tối tức thời mà không tạo lại ViewModel.
 - Hai bảng màu và control template nằm trong `Themes`; lệnh đổi giao diện thuộc ViewModel,
   còn thao tác tài nguyên WPF được cô lập sau `IThemeService`.
+- Trang Công cụ và cài đặt dùng một luồng cuộn dọc; các thẻ cập nhật yt-dlp và
+  FFmpeg xếp dọc để không cần cuộn ngang khi DPI hoặc chiều rộng khả dụng thay đổi.
 - Trên Windows 11 build 22000 trở lên, code-behind đồng bộ thanh tiêu đề native bằng
   `DWMWA_USE_IMMERSIVE_DARK_MODE`; đây là view concern và không đi vào Core/Infrastructure.
 

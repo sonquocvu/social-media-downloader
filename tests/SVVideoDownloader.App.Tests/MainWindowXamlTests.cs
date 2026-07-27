@@ -40,6 +40,14 @@ public sealed class MainWindowXamlTests
                 var indeterminateBinding = BindingOperations.GetBinding(
                     progressBar,
                     ProgressBar.IsIndeterminateProperty);
+                var settingsScrollViewer = Assert.IsType<ScrollViewer>(
+                    window.FindName("SettingsScrollViewer"));
+                var updateActionsPanel = Assert.IsType<StackPanel>(
+                    window.FindName("ToolUpdateActionsPanel"));
+                var ytDlpUpdatePanel = Assert.IsType<Border>(
+                    window.FindName("YtDlpUpdatePanel"));
+                var ffmpegUpdatePanel = Assert.IsType<Border>(
+                    window.FindName("FfmpegUpdatePanel"));
 
                 Assert.NotNull(binding);
                 Assert.Equal(BindingMode.OneWay, binding.Mode);
@@ -55,6 +63,13 @@ public sealed class MainWindowXamlTests
                 Assert.NotNull(indeterminateBinding);
                 Assert.Equal("IsProgressIndeterminate", indeterminateBinding.Path.Path);
                 Assert.Equal(BindingMode.OneWay, indeterminateBinding.Mode);
+                Assert.Equal(
+                    ScrollBarVisibility.Disabled,
+                    settingsScrollViewer.HorizontalScrollBarVisibility);
+                Assert.Equal(Orientation.Vertical, updateActionsPanel.Orientation);
+                Assert.Equal(
+                    new UIElement[] { ytDlpUpdatePanel, ffmpegUpdatePanel },
+                    updateActionsPanel.Children.Cast<UIElement>());
 
                 var themeService = new WpfThemeService(application);
                 themeService.Apply(ApplicationTheme.Dark);

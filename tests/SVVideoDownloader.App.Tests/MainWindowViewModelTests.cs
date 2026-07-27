@@ -20,6 +20,7 @@ public sealed class MainWindowViewModelTests
         Assert.False(viewModel.AnalyzeCommand.CanExecute(null));
         Assert.False(viewModel.DownloadCommand.CanExecute(null));
         Assert.False(viewModel.UpdateFfmpegCommand.CanExecute(null));
+        Assert.Equal(DownloadFormat.Video, viewModel.SelectedDownloadFormat?.Format);
         Assert.Equal("Tốt nhất", viewModel.SelectedQuality?.DisplayName);
     }
 
@@ -29,8 +30,10 @@ public sealed class MainWindowViewModelTests
         using var viewModel = TestData.CreateMainViewModel(
             defaultQuality: QualityPreset.AudioMp3);
 
-        Assert.Equal(QualityPreset.AudioMp3, viewModel.SelectedQuality?.Preset);
-        Assert.Equal("Âm thanh MP3", viewModel.SelectedQuality?.DisplayName);
+        Assert.Equal(DownloadFormat.Mp3, viewModel.SelectedDownloadFormat?.Format);
+        Assert.True(viewModel.IsMp3FormatSelected);
+        Assert.False(viewModel.IsVideoFormatSelected);
+        Assert.Equal(QualityPreset.Best, viewModel.SelectedQuality?.Preset);
     }
 
     [Fact]
@@ -192,6 +195,26 @@ public sealed class MainWindowViewModelTests
     }
 
     [Fact]
+    public async Task Download_Mp3SelectionCreatesAudioRequestAndPersistsSelection()
+    {
+        var downloads = new FakeDownloadCoordinator();
+        var userData = new FakeUserDataService();
+        using var viewModel = await CreateAnalyzedViewModelAsync(
+            downloads,
+            userData: userData);
+        viewModel.SelectedDownloadFormat = viewModel.DownloadFormatOptions.Single(
+            item => item.Format == DownloadFormat.Mp3);
+
+        viewModel.DownloadCommand.Execute(null);
+        await Assert.Single(viewModel.DownloadQueue).StartAsync();
+        await viewModel.PrepareForCloseAsync();
+
+        Assert.Equal(QualityPreset.AudioMp3, downloads.LastRequest?.Options.QualityPreset);
+        Assert.Equal(QualityPreset.AudioMp3, Assert.Single(userData.SavedSettings).DefaultQuality);
+        Assert.True(viewModel.IsMp3FormatSelected);
+    }
+
+    [Fact]
     public async Task ChangingUrl_ClearsPreviousMetadataAndRightsConfirmation()
     {
         using var viewModel = await CreateAnalyzedViewModelAsync();
@@ -332,14 +355,19 @@ public sealed class MainWindowViewModelTests
 
     private static async Task<MainWindowViewModel> CreateAnalyzedViewModelAsync(
         FakeDownloadCoordinator? downloads = null,
-        FakeToolManagementService? tools = null)
+        FakeToolManagementService? tools = null,
+        FakeUserDataService? userData = null)
     {
         var metadata = new FakeMetadataProvider
         {
             Handler = (_, _) => Task.FromResult(
                 MediaOperationResult<VideoInfo>.Success(TestData.Video())),
         };
-        var viewModel = TestData.CreateMainViewModel(metadata, downloads, tools: tools);
+        var viewModel = TestData.CreateMainViewModel(
+            metadata,
+            downloads,
+            tools: tools,
+            userData: userData);
         viewModel.VideoUrl = TestData.VideoUrl;
         await viewModel.AnalyzeCommand.ExecuteAsync();
         viewModel.RightsConfirmed = true;

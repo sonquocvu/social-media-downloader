@@ -230,18 +230,42 @@
 
                         <Label Margin="0,16,0,0"
                                Padding="0,0,0,6"
-                               Target="{Binding ElementName=QualitySelector}"
-                               Content="Chất lượng" />
-                        <ComboBox x:Name="QualitySelector"
-                                  ItemsSource="{Binding QualityOptions}"
-                                  SelectedItem="{Binding SelectedQuality}"
-                                  AutomationProperties.Name="Chọn chất lượng">
+                               Target="{Binding ElementName=DownloadFormatSelector}"
+                               Content="Loại tệp" />
+                        <ComboBox x:Name="DownloadFormatSelector"
+                                  ItemsSource="{Binding DownloadFormatOptions}"
+                                  SelectedItem="{Binding SelectedDownloadFormat}"
+                                  AutomationProperties.Name="Chọn loại tệp tải xuống">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding DisplayName}" />
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
+
+                        <StackPanel Visibility="{Binding IsVideoFormatSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <Label Margin="0,14,0,0"
+                                   Padding="0,0,0,6"
+                                   Target="{Binding ElementName=QualitySelector}"
+                                   Content="Chất lượng video" />
+                            <ComboBox x:Name="QualitySelector"
+                                      ItemsSource="{Binding QualityOptions}"
+                                      SelectedItem="{Binding SelectedQuality}"
+                                      AutomationProperties.Name="Chọn chất lượng video">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding DisplayName}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <TextBlock Margin="0,10,0,0"
+                                   FontSize="12"
+                                   Style="{StaticResource SecondaryText}"
+                                   Text="Tệp MP3 chỉ chứa âm thanh và được chuyển đổi bằng FFmpeg ở mức chất lượng VBR cao nhất."
+                                   TextWrapping="Wrap"
+                                   Visibility="{Binding IsMp3FormatSelected, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
                         <Label Margin="0,14,0,0"
                                Padding="0,0,0,6"
@@ -558,9 +582,10 @@
         </TabItem>
 
         <TabItem Header="_Công cụ và cài đặt">
-            <ScrollViewer HorizontalScrollBarVisibility="Auto"
+            <ScrollViewer x:Name="SettingsScrollViewer"
+                          HorizontalScrollBarVisibility="Disabled"
                           VerticalScrollBarVisibility="Auto">
-                <Grid Margin="28" MinWidth="760">
+                <Grid Margin="28">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
@@ -628,14 +653,12 @@
                                    TextWrapping="Wrap" />
                     </Border>
 
-                    <Grid Grid.Row="3" Margin="0,14,0,28">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="16" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-
-                        <Border Grid.Column="0" Style="{StaticResource SectionBorder}">
+                    <StackPanel x:Name="ToolUpdateActionsPanel"
+                                Grid.Row="3"
+                                Margin="0,14,0,28"
+                                Orientation="Vertical">
+                        <Border x:Name="YtDlpUpdatePanel"
+                                Style="{StaticResource SectionBorder}">
                             <StackPanel>
                                 <TextBlock Style="{StaticResource SectionTitleText}"
                                            Text="Cập nhật yt-dlp thủ công" />
@@ -656,7 +679,9 @@
                             </StackPanel>
                         </Border>
 
-                        <Border Grid.Column="2" Style="{StaticResource SectionBorder}">
+                        <Border x:Name="FfmpegUpdatePanel"
+                                Margin="0,14,0,0"
+                                Style="{StaticResource SectionBorder}">
                             <StackPanel>
                                 <TextBlock Style="{StaticResource SectionTitleText}"
                                            Text="Cài đặt hoặc cập nhật FFmpeg" />
@@ -670,9 +695,11 @@
                                            TextWrapping="Wrap" />
                                 <CheckBox Margin="0,12,0,0"
                                           IsChecked="{Binding FfmpegLicenseConfirmed, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                          Content="Tôi xác nhận tải gói FFmpeg x64 từ gyan.dev và đã đọc thông tin GPLv3."
                                           ToolTip="Cần xác nhận trước mỗi lần cài đặt hoặc cập nhật FFmpeg."
-                                          AutomationProperties.Name="Xác nhận nguồn và giấy phép FFmpeg" />
+                                          AutomationProperties.Name="Xác nhận nguồn và giấy phép FFmpeg">
+                                    <TextBlock Text="Tôi xác nhận tải gói FFmpeg x64 từ gyan.dev và đã đọc thông tin GPLv3."
+                                               TextWrapping="Wrap" />
+                                </CheckBox>
                                 <Button Margin="0,15,0,0"
                                         HorizontalAlignment="Left"
                                         MinWidth="235"
@@ -681,7 +708,7 @@
                                         Content="_Cài đặt / cập nhật FFmpeg" />
                             </StackPanel>
                         </Border>
-                    </Grid>
+                    </StackPanel>
                 </Grid>
             </ScrollViewer>
         </TabItem>

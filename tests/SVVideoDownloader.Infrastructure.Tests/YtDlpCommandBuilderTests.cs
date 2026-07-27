@@ -57,6 +57,7 @@ public sealed class YtDlpCommandBuilderTests
         Assert.Equal(expectedSelector, arguments[formatIndex + 1]);
         Assert.Equal(preset == QualityPreset.AudioMp3, arguments.Contains("--extract-audio"));
         Assert.Equal(preset == QualityPreset.AudioMp3, arguments.Contains("--audio-format"));
+        Assert.Equal(preset == QualityPreset.AudioMp3, arguments.Contains("--audio-quality"));
     }
 
     [Fact]
@@ -102,6 +103,28 @@ public sealed class YtDlpCommandBuilderTests
             arguments,
             argument => bannedFragments.Any(
                 banned => argument.Contains(banned, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    [Fact]
+    public void Mp3DownloadRequestExtractsBestAudioAndConvertsItToMp3()
+    {
+        var request = YtDlpCommandBuilder.BuildDownloadRequest(
+            TestData.CreateOptions(),
+            TestData.CreateRequest(QualityPreset.AudioMp3));
+        var arguments = request.ArgumentList.ToList();
+
+        var extractAudioIndex = arguments.IndexOf("--extract-audio");
+        var audioFormatIndex = arguments.IndexOf("--audio-format");
+        var audioQualityIndex = arguments.IndexOf("--audio-quality");
+
+        Assert.True(extractAudioIndex >= 0);
+        Assert.True(audioFormatIndex > extractAudioIndex);
+        Assert.True(audioQualityIndex > audioFormatIndex);
+        Assert.Equal("mp3", arguments[audioFormatIndex + 1]);
+        Assert.Equal("0", arguments[audioQualityIndex + 1]);
+        Assert.Equal(1, arguments.Count(argument => argument == "--extract-audio"));
+        Assert.Equal(1, arguments.Count(argument => argument == "--audio-format"));
+        Assert.Equal(1, arguments.Count(argument => argument == "--audio-quality"));
     }
 
     [Fact]

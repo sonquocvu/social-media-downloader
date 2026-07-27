@@ -22,7 +22,8 @@ phép người dùng chủ động cài/cập nhật yt-dlp và gói FFmpeg/ffpr
 ## 3. Mục tiêu sản phẩm
 
 - Nhận một URL HTTPS thuộc YouTube, TikTok hoặc Facebook.
-- Cho người dùng chọn định dạng/chất lượng hợp lệ mà nguồn công khai cung cấp.
+- Cho người dùng chọn tải tệp Video hoặc MP3; khi tải Video có thể chọn chất
+  lượng hợp lệ mà nguồn công khai cung cấp.
 - Tải xuống với tiến độ, khả năng hủy và thông báo lỗi bằng tiếng Việt.
 - Dùng `yt-dlp`, `ffmpeg` và `ffprobe` dưới dạng executable ngoài tiến trình.
 - Giữ lịch sử tối thiểu và bảo vệ dữ liệu riêng tư theo mặc định.
@@ -74,6 +75,9 @@ tệp trùng và phân phối binary vẫn phải được phê duyệt trước
   minh cả hai executable và rollback theo cặp nếu thay thế/hậu kiểm thất bại.
 - FR-16: Cung cấp MSI x64 có phiên bản và hỗ trợ cài mới, nâng cấp, chặn hạ cấp,
   gỡ ứng dụng mà không xóa LocalApplicationData hoặc media của người dùng.
+- FR-17: Sau khi phân tích liên kết, cho phép chọn rõ loại tệp Video hoặc MP3.
+  Chất lượng chỉ áp dụng cho Video; MP3 dùng luồng âm thanh tốt nhất và chuyển
+  đổi bằng FFmpeg ở mức chất lượng VBR cao nhất (`--audio-quality 0`).
 
 ## 7. Yêu cầu phi chức năng
 
@@ -85,7 +89,8 @@ tệp trùng và phân phối binary vẫn phải được phê duyệt trước
 - NFR-06: Mọi thông báo hiển thị cho người dùng phải bằng tiếng Việt.
 - NFR-07: Bản publish self-contained win-x64 không chứa binary media hoặc dữ liệu cá nhân.
 - NFR-08: Cả hai bảng màu phải giữ nhãn accessibility, focus bàn phím, độ tương phản dễ đọc
-  và bố cục cuộn được khi phóng to giao diện.
+  và bố cục cuộn dọc được khi phóng to giao diện. Trang Công cụ và cài đặt không
+  dùng cuộn ngang; các tác vụ yt-dlp và FFmpeg được xếp theo chiều dọc.
 - NFR-09: MSI chỉ chứa ứng dụng self-contained; không chứa yt-dlp, FFmpeg,
   ffprobe, settings, history, log, secret hoặc media.
 

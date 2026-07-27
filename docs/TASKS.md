@@ -1,6 +1,6 @@
 # Danh sách công việc
 
-Ngày cập nhật: 2026-07-17.
+Ngày cập nhật: 2026-07-26.
 
 ## Hoàn thành trong khung ban đầu
 
@@ -43,6 +43,12 @@ Ngày cập nhật: 2026-07-17.
 - [x] Thêm tài liệu thiết lập và khắc phục sự cố cho sử dụng riêng.
 - [x] Nâng cấp giao diện WPF với hệ thống thiết kế sáng/tối, control template thống nhất
       và lựa chọn giao diện được nhớ sau khi khởi động lại.
+- [x] Tách lựa chọn Video/MP3 khỏi chất lượng video; nhớ lựa chọn và kiểm thử đối
+      số trích xuất/chuyển đổi MP3 tại ranh giới process.
+- [x] Mã hóa MP3 bằng mức chất lượng VBR cao nhất của yt-dlp/FFmpeg và kiểm thử
+      `--audio-quality 0` không được áp dụng cho tải Video.
+- [x] Xếp dọc các thẻ quản lý yt-dlp/FFmpeg và tắt cuộn ngang trên trang Công cụ
+      và cài đặt.
 
 ## P0 — quyết định trước khi triển khai tải
 

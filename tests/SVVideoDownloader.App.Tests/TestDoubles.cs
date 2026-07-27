@@ -42,6 +42,8 @@ internal sealed class FakeDownloadCoordinator : IDownloadCoordinator
 
     public int CallCount { get; private set; }
 
+    public DownloadRequest? LastRequest { get; private set; }
+
     public string? LastOutputFolder { get; private set; }
 
     public Task<MediaOperationResult<DownloadResult>> DownloadAsync(
@@ -51,6 +53,7 @@ internal sealed class FakeDownloadCoordinator : IDownloadCoordinator
         CancellationToken cancellationToken = default)
     {
         CallCount++;
+        LastRequest = request;
         LastOutputFolder = outputFolder;
         return Handler(request, outputFolder, progress, cancellationToken);
     }

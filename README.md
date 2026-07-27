@@ -1,6 +1,8 @@
 # SVVideoDownloader
 
-SVVideoDownloader là ứng dụng WPF riêng tư bằng tiếng Việt dành cho Windows x64. Mục tiêu của ứng dụng là tải video công khai do người dùng sở hữu hoặc được cho phép tải từ YouTube, TikTok và Facebook.
+SVVideoDownloader là ứng dụng WPF riêng tư bằng tiếng Việt dành cho Windows x64.
+Ứng dụng tải tệp Video hoặc MP3 từ nội dung công khai do người dùng sở hữu hoặc
+được cho phép tải trên YouTube, TikTok và Facebook.
 
 Phiên bản hiện tại: **1.0.0**.
 
@@ -66,13 +68,16 @@ tra SHA-256 trước khi chạy. Xem [quy trình phát hành](docs/RELEASING.md)
 
 - Dán và phân tích URL HTTPS công khai của YouTube, TikTok hoặc Facebook.
 - Hiển thị ảnh thu nhỏ, tiêu đề, nguồn và thời lượng khi metadata có sẵn.
-- Chọn preset chất lượng, thư mục lưu và xác nhận quyền trước mỗi tác vụ.
+- Chọn loại tệp Video/MP3; chọn chất lượng video, thư mục lưu và xác nhận quyền
+  trước mỗi tác vụ.
+- MP3 lấy luồng âm thanh tốt nhất và được mã hóa bằng mức chất lượng VBR cao nhất.
 - Theo dõi hàng đợi, phần trăm, dung lượng đã tải, tốc độ và thời gian còn lại.
 - Hủy, thử lại, xóa mục hoàn tất, mở tệp và mở thư mục.
 - Xác nhận bằng tiếng Việt khi đóng cửa sổ trong lúc còn tác vụ hoạt động.
 - Giao diện sáng/tối đồng bộ, có nút chuyển nhanh và nhớ lựa chọn sau khi khởi động lại.
 - Hệ thống thiết kế WPF riêng với thẻ bo góc, trạng thái tương phản rõ và điều hướng bàn phím.
-- Nhớ thư mục tải và chất lượng mặc định trong `%LOCALAPPDATA%`.
+- Trang Công cụ và cài đặt xếp dọc các tác vụ yt-dlp/FFmpeg, chỉ cần cuộn dọc.
+- Nhớ thư mục tải, loại tệp/chất lượng mặc định trong `%LOCALAPPDATA%`.
 - Lưu tối đa 500 tác vụ hoàn tất; xóa lịch sử không xóa media.
 - Kiểm tra trạng thái/phiên bản yt-dlp, FFmpeg và ffprobe.
 - Cập nhật yt-dlp chỉ khi người dùng yêu cầu, với SHA-256, thay thế nguyên tử và rollback.

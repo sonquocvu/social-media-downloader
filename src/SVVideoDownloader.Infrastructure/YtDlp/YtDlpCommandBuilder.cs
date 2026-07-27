@@ -61,6 +61,8 @@ internal static class YtDlpCommandBuilder
             arguments.Add("--extract-audio");
             arguments.Add("--audio-format");
             arguments.Add("mp3");
+            arguments.Add("--audio-quality");
+            arguments.Add("0");
         }
 
         arguments.Add("--output");
