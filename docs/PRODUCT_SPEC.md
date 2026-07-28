@@ -22,7 +22,7 @@ phép người dùng chủ động cài/cập nhật yt-dlp và gói FFmpeg/ffpr
 ## 3. Mục tiêu sản phẩm
 
 - Nhận một URL HTTPS thuộc YouTube, TikTok hoặc Facebook.
-- Cho người dùng chọn tải tệp Video hoặc MP3; khi tải Video có thể chọn chất
+- Cho người dùng chọn tải tệp Video MP4 hoặc MP3; khi tải Video có thể chọn chất
   lượng hợp lệ mà nguồn công khai cung cấp.
 - Tải xuống với tiến độ, khả năng hủy và thông báo lỗi bằng tiếng Việt.
 - Dùng `yt-dlp`, `ffmpeg` và `ffprobe` dưới dạng executable ngoài tiến trình.
@@ -75,9 +75,11 @@ tệp trùng và phân phối binary vẫn phải được phê duyệt trước
   minh cả hai executable và rollback theo cặp nếu thay thế/hậu kiểm thất bại.
 - FR-16: Cung cấp MSI x64 có phiên bản và hỗ trợ cài mới, nâng cấp, chặn hạ cấp,
   gỡ ứng dụng mà không xóa LocalApplicationData hoặc media của người dùng.
-- FR-17: Sau khi phân tích liên kết, cho phép chọn rõ loại tệp Video hoặc MP3.
-  Chất lượng chỉ áp dụng cho Video; MP3 dùng luồng âm thanh tốt nhất và chuyển
-  đổi bằng FFmpeg ở mức chất lượng VBR cao nhất (`--audio-quality 0`).
+- FR-17: Sau khi phân tích liên kết, cho phép chọn rõ loại tệp MP4 (video) hoặc
+  MP3 (âm thanh). Chất lượng chỉ áp dụng cho Video; luồng Video ưu tiên codec
+  H.264/AAC và kết quả khác container MP4 được chuyển bằng FFmpeg
+  (`--recode-video mp4`). MP3 dùng luồng âm thanh tốt nhất và chuyển đổi bằng
+  FFmpeg ở mức chất lượng VBR cao nhất (`--audio-quality 0`).
 
 ## 7. Yêu cầu phi chức năng
 
@@ -122,7 +124,7 @@ tệp trùng và phân phối binary vẫn phải được phê duyệt trước
 - Có cần xác minh GPG/release attestation ngoài SHA-256 cho updater yt-dlp hay không.
 - Định nghĩa chính xác về video Facebook/TikTok “công khai” và cách xử lý URL chuyển hướng.
 - Phê duyệt cuối cùng cho nội dung xác nhận quyền và tuyên bố pháp lý MVP.
-- Định dạng mặc định, quy tắc đặt tên, xử lý trùng tệp và thư mục mặc định.
+- Quy tắc đặt tên, xử lý trùng tệp và thư mục mặc định.
 - Thời gian giữ lịch sử dài hạn ngoài giới hạn hiện tại 500 mục; mặc định không telemetry.
 - Ma trận kiểm thử accessibility, high contrast, DPI và phiên bản Windows tối thiểu.
 - Phiên bản Windows tối thiểu, chứng thư/quy trình ký mã và kênh phân phối artifact.

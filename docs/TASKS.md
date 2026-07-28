@@ -1,6 +1,6 @@
 # Danh sách công việc
 
-Ngày cập nhật: 2026-07-27.
+Ngày cập nhật: 2026-07-28.
 
 ## Hoàn thành trong khung ban đầu
 
@@ -47,6 +47,9 @@ Ngày cập nhật: 2026-07-27.
       số trích xuất/chuyển đổi MP3 tại ranh giới process.
 - [x] Mã hóa MP3 bằng mức chất lượng VBR cao nhất của yt-dlp/FFmpeg và kiểm thử
       `--audio-quality 0` không được áp dụng cho tải Video.
+- [x] Chuẩn hóa đầu ra Video thành MP4: ưu tiên codec H.264/AAC, chỉ mã hóa lại
+      bằng FFmpeg khi container cuối chưa là MP4; kiểm thử đối số, hủy, timeout
+      và ánh xạ lỗi không làm lộ output chẩn đoán.
 - [x] Xếp dọc các thẻ quản lý yt-dlp/FFmpeg và tắt cuộn ngang trên trang Công cụ
       và cài đặt.
 - [x] Sửa thư mục và kiểu shortcut MSI theo máy để vượt qua ICE38/ICE43/ICE57.

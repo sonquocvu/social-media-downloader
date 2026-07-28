@@ -127,6 +127,69 @@ public sealed class YtDlpMediaServiceTests
     }
 
     [Fact]
+    public async Task DownloadPropagatesCancellationDuringDownloadOrMp4Conversion()
+    {
+        var runner = new FakeProcessRunner();
+        runner.EnqueueResult(YtDlpVersion());
+        runner.EnqueueResult(FfmpegVersion());
+        runner.EnqueueResult(FfprobeVersion());
+        runner.EnqueueWaitForCancellation();
+        var service = new YtDlpMediaService(TestData.CreateOptions(), runner);
+        using var cancellationSource = new CancellationTokenSource();
+
+        var downloadTask = service.DownloadAsync(
+            TestData.CreateRequest(),
+            cancellationToken: cancellationSource.Token);
+        Assert.Equal(4, runner.Requests.Count);
+        cancellationSource.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => downloadTask);
+
+        Assert.Contains("--recode-video", runner.Requests[^1].ArgumentList);
+    }
+
+    [Fact]
+    public async Task DownloadMapsMp4ConversionTimeoutWithoutReturningDiagnostics()
+    {
+        var runner = new FakeProcessRunner();
+        runner.EnqueueResult(YtDlpVersion());
+        runner.EnqueueResult(FfmpegVersion());
+        runner.EnqueueResult(FfprobeVersion());
+        runner.EnqueueException(new ExternalProcessTimeoutException());
+        var service = new YtDlpMediaService(TestData.CreateOptions(), runner);
+
+        var result = await service.DownloadAsync(
+            TestData.CreateRequest(),
+            cancellationToken: CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(MediaErrorCategory.TimedOut, result.Error!.Category);
+        Assert.Equal(MediaComponent.MetadataExtractor, result.Error.Component);
+        Assert.Contains("--recode-video", runner.Requests[^1].ArgumentList);
+    }
+
+    [Fact]
+    public async Task DownloadFailureDoesNotExposeRawToolOutput()
+    {
+        const string secret = "cookie=private-token&password=secret";
+        var runner = new FakeProcessRunner();
+        runner.EnqueueResult(YtDlpVersion());
+        runner.EnqueueResult(FfmpegVersion());
+        runner.EnqueueResult(FfprobeVersion());
+        runner.EnqueueResult(new ProcessRunResult(1, string.Empty, secret));
+        var service = new YtDlpMediaService(TestData.CreateOptions(), runner);
+
+        var result = await service.DownloadAsync(
+            TestData.CreateRequest(),
+            cancellationToken: CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(MediaErrorCategory.ExecutionFailed, result.Error!.Category);
+        Assert.Equal(MediaComponent.MetadataExtractor, result.Error.Component);
+        Assert.DoesNotContain(secret, result.Error.ToString(), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task GetVideoInfoDoesNotReturnRawStderr()
     {
         const string secret = "cookie=private-token&password=secret";

@@ -58,6 +58,8 @@ public sealed class YtDlpCommandBuilderTests
         Assert.Equal(preset == QualityPreset.AudioMp3, arguments.Contains("--extract-audio"));
         Assert.Equal(preset == QualityPreset.AudioMp3, arguments.Contains("--audio-format"));
         Assert.Equal(preset == QualityPreset.AudioMp3, arguments.Contains("--audio-quality"));
+        Assert.Equal(preset != QualityPreset.AudioMp3, arguments.Contains("--format-sort"));
+        Assert.Equal(preset != QualityPreset.AudioMp3, arguments.Contains("--recode-video"));
     }
 
     [Fact]
@@ -125,6 +127,37 @@ public sealed class YtDlpCommandBuilderTests
         Assert.Equal(1, arguments.Count(argument => argument == "--extract-audio"));
         Assert.Equal(1, arguments.Count(argument => argument == "--audio-format"));
         Assert.Equal(1, arguments.Count(argument => argument == "--audio-quality"));
+        Assert.DoesNotContain("--format-sort", arguments);
+        Assert.DoesNotContain("--recode-video", arguments);
+    }
+
+    [Theory]
+    [InlineData(QualityPreset.Best)]
+    [InlineData(QualityPreset.Video1080p)]
+    [InlineData(QualityPreset.Video720p)]
+    [InlineData(QualityPreset.Video480p)]
+    public void VideoDownloadRequestPrefersCompatibleCodecsAndConvertsToMp4(
+        QualityPreset preset)
+    {
+        var request = YtDlpCommandBuilder.BuildDownloadRequest(
+            TestData.CreateOptions(),
+            TestData.CreateRequest(preset));
+        var arguments = request.ArgumentList.ToList();
+
+        var formatSortIndex = arguments.IndexOf("--format-sort");
+        var recodeVideoIndex = arguments.IndexOf("--recode-video");
+
+        Assert.True(formatSortIndex >= 0);
+        Assert.True(recodeVideoIndex > formatSortIndex);
+        Assert.Equal(
+            "vcodec:h264,lang,quality,res,fps,hdr:12,acodec:aac",
+            arguments[formatSortIndex + 1]);
+        Assert.Equal("mp4", arguments[recodeVideoIndex + 1]);
+        Assert.Equal(1, arguments.Count(argument => argument == "--format-sort"));
+        Assert.Equal(1, arguments.Count(argument => argument == "--recode-video"));
+        Assert.DoesNotContain("--extract-audio", arguments);
+        Assert.DoesNotContain("--audio-format", arguments);
+        Assert.DoesNotContain("--audio-quality", arguments);
     }
 
     [Fact]

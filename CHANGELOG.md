@@ -3,6 +3,18 @@
 Tài liệu này ghi lại các thay đổi đáng chú ý của SV Video Downloader. Dự án dùng phiên bản
 ngữ nghĩa `MAJOR.MINOR.PATCH`; xem [quy trình phát hành](docs/RELEASING.md).
 
+## [Chưa phát hành]
+
+### Đã thêm
+
+- Đầu ra MP4 cho mọi preset Video: ưu tiên H.264/AAC và dùng FFmpeg chuyển đổi
+  khi tệp tải về chưa ở container MP4.
+- Kiểm thử đối số process, hủy, timeout và lỗi công cụ cho pipeline MP4.
+
+### Đã thay đổi
+
+- Nhãn loại tệp Video trong giao diện được đổi thành “MP4 (video)”.
+
 ## [1.1.0] - 2026-07-27
 
 Phiên bản bổ sung tải MP3 chất lượng cao và cải thiện bố cục trang Công cụ và

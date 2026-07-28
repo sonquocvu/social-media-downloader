@@ -82,7 +82,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         _outputFolder = options.DefaultOutputFolder;
         DownloadFormatOptions =
         [
-            new(DownloadFormat.Video, "Video"),
+            new(DownloadFormat.Video, "MP4 (video)"),
             new(DownloadFormat.Mp3, "MP3 (âm thanh)"),
         ];
         QualityOptions =

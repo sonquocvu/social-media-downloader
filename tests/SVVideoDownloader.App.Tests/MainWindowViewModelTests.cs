@@ -21,6 +21,7 @@ public sealed class MainWindowViewModelTests
         Assert.False(viewModel.DownloadCommand.CanExecute(null));
         Assert.False(viewModel.UpdateFfmpegCommand.CanExecute(null));
         Assert.Equal(DownloadFormat.Video, viewModel.SelectedDownloadFormat?.Format);
+        Assert.Equal("MP4 (video)", viewModel.SelectedDownloadFormat?.DisplayName);
         Assert.Equal("Tốt nhất", viewModel.SelectedQuality?.DisplayName);
     }
 

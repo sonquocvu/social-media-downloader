@@ -12,6 +12,8 @@ internal static class YtDlpCommandBuilder
 {
     private const string ProgressTemplate =
         "download:" + YtDlpProgressParser.LinePrefix + "%(progress)j";
+    private const string Mp4FormatSort =
+        "vcodec:h264,lang,quality,res,fps,hdr:12,acodec:aac";
 
     public static ProcessRequest BuildMetadataRequest(
         ExternalToolOptions options,
@@ -63,6 +65,13 @@ internal static class YtDlpCommandBuilder
             arguments.Add("mp3");
             arguments.Add("--audio-quality");
             arguments.Add("0");
+        }
+        else
+        {
+            arguments.Add("--format-sort");
+            arguments.Add(Mp4FormatSort);
+            arguments.Add("--recode-video");
+            arguments.Add("mp4");
         }
 
         arguments.Add("--output");

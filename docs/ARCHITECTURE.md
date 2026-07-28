@@ -41,6 +41,9 @@ SVVideoDownloader.Core <--- SVVideoDownloader.Infrastructure
   credential hoặc hành vi playlist. `--no-playlist` giữ phạm vi một video cho MVP.
 - FFmpeg/ffprobe được kiểm tra bằng `-version`; thư mục chứa hai binary được
   truyền cho yt-dlp bằng `--ffmpeg-location`.
+- Preset Video giữ giới hạn độ phân giải trong Core nhưng Infrastructure ưu tiên
+  H.264/AAC bằng `--format-sort` và dùng `--recode-video mp4`; yt-dlp bỏ qua
+  bước mã hóa lại khi tệp cuối đã là MP4. Preset MP3 không nhận các đối số Video.
 - Sở hữu persistence JSON dưới `LocalApplicationData`, lịch sử giới hạn 500 mục,
   logger xoay vòng/redaction, kiểm tra trạng thái công cụ và các updater thủ công.
 - Updater tải artifact/checksum qua HTTPS vào tệp tạm, kiểm tra SHA-256 và phiên
@@ -57,10 +60,11 @@ SVVideoDownloader.Core <--- SVVideoDownloader.Infrastructure
   và implementation Infrastructure.
 - Có màn hình phân tích, tùy chọn tải và hàng đợi. Thao tác filesystem/process từ
   ViewModel đi qua dịch vụ bất đồng bộ; hộp thoại xác nhận đóng cửa sổ vẫn là view concern.
-- Giao diện tách lựa chọn loại tệp Video/MP3 khỏi chất lượng video. ViewModel ánh
-  xạ lựa chọn MP3 sang preset Core `AudioMp3`; Infrastructure chuyển preset này
-  thành `--extract-audio --audio-format mp3 --audio-quality 0`, không đưa cú pháp
-  `yt-dlp` vào App/Core.
+- Giao diện tách lựa chọn loại tệp MP4 (video)/MP3 (âm thanh) khỏi chất lượng
+  video. ViewModel ánh xạ lựa chọn MP3 sang preset Core `AudioMp3`;
+  Infrastructure chuyển preset này thành
+  `--extract-audio --audio-format mp3 --audio-quality 0`, còn các preset Video
+  thành đầu ra MP4, không đưa cú pháp `yt-dlp` vào App/Core.
 - `DownloadCoordinator` tạo cấu hình Infrastructure theo thư mục đích của từng tác
   vụ mà không đưa khái niệm filesystem vào Core.
 - `EngineOperationGate` loại trừ cập nhật engine với metadata/download; updater
@@ -249,6 +253,9 @@ kiểm tra lại trên Windows Installer thực trước khi phát hành. Execut
   bên thứ ba; lựa chọn sáng/tối được nhớ trong LocalApplicationData.
 - ADR tạm thời 008: private-use dùng MSI per-machine x64 với UpgradeCode ổn định;
   gỡ/nâng cấp ứng dụng không sở hữu hoặc xóa LocalApplicationData và media.
+- ADR tạm thời 009: mọi preset Video tạo tệp MP4; ưu tiên H.264/AAC để tránh mã
+  hóa lại khi nguồn phù hợp, nếu container cuối khác MP4 thì yt-dlp gọi FFmpeg
+  qua `--recode-video mp4`. MP3 giữ pipeline riêng.
 
 Các ADR trên cần tách thành tài liệu riêng nếu phạm vi hoặc nhóm phát triển mở rộng.
 
@@ -264,6 +271,8 @@ Các ADR trên cần tách thành tài liệu riêng nếu phạm vi hoặc nhó
 - Nền tảng có thể thay đổi URL, điều khoản hoặc biện pháp chống tự động hóa mà không báo trước.
 - Hỗ trợ YouTube đầy đủ có thể làm tăng dependency và nghĩa vụ giấy phép do JavaScript runtime/`yt-dlp-ejs`.
 - Binary FFmpeg khác nhau có tập codec và giấy phép khác nhau.
+- Nguồn không có biến thể H.264/AAC phù hợp có thể cần mã hóa lại sang MP4, làm
+  tăng thời gian/CPU và có thể giảm chất lượng so với remux không mất dữ liệu.
 - Xử lý hủy process và tệp tạm sai có thể để lại process/tệp hoặc xóa nhầm dữ liệu.
 - URL và metadata có thể chứa dữ liệu nhạy cảm; thiết kế log cần được threat-model trước.
 - Kiểm tra `--version`/`-version` chỉ xác nhận hình dạng/danh tính cơ bản, không

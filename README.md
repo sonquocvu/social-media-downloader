@@ -1,8 +1,8 @@
 # SVVideoDownloader
 
 SVVideoDownloader là ứng dụng WPF riêng tư bằng tiếng Việt dành cho Windows x64.
-Ứng dụng tải tệp Video hoặc MP3 từ nội dung công khai do người dùng sở hữu hoặc
-được cho phép tải trên YouTube, TikTok và Facebook.
+Ứng dụng tải tệp Video MP4 hoặc MP3 từ nội dung công khai do người dùng sở hữu
+hoặc được cho phép tải trên YouTube, TikTok và Facebook.
 
 Phiên bản hiện tại: **1.1.0**.
 
@@ -68,8 +68,9 @@ tra SHA-256 trước khi chạy. Xem [quy trình phát hành](docs/RELEASING.md)
 
 - Dán và phân tích URL HTTPS công khai của YouTube, TikTok hoặc Facebook.
 - Hiển thị ảnh thu nhỏ, tiêu đề, nguồn và thời lượng khi metadata có sẵn.
-- Chọn loại tệp Video/MP3; chọn chất lượng video, thư mục lưu và xác nhận quyền
-  trước mỗi tác vụ.
+- Chọn loại tệp MP4 (video)/MP3 (âm thanh); chọn chất lượng video, thư mục lưu
+  và xác nhận quyền trước mỗi tác vụ.
+- Video ưu tiên H.264/AAC và được FFmpeg chuyển sang container MP4 khi cần.
 - MP3 lấy luồng âm thanh tốt nhất và được mã hóa bằng mức chất lượng VBR cao nhất.
 - Theo dõi hàng đợi, phần trăm, dung lượng đã tải, tốc độ và thời gian còn lại.
 - Hủy, thử lại, xóa mục hoàn tất, mở tệp và mở thư mục.
