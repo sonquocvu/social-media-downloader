@@ -1,6 +1,6 @@
 # Danh sách công việc
 
-Ngày cập nhật: 2026-07-28.
+Ngày cập nhật: 2026-07-30.
 
 ## Hoàn thành trong khung ban đầu
 
@@ -58,6 +58,10 @@ Ngày cập nhật: 2026-07-28.
 - [x] Đối chiếu MSI 1.0.0/1.1.0 và registration đang cài: giữ UpgradeCode,
       install scope, feature/component GUID; dùng ProductCode mới và
       `RemoveExistingProducts` trước `InstallFiles` để hỗ trợ nâng cấp.
+- [x] Chuyển gói 1.3.0 sang Inno Setup 7.0.2 x64 với wizard hiện đại sáng/tối,
+      artwork thương hiệu, bản dịch tiếng Việt, shortcut tùy chọn, downgrade
+      guard và di trú khỏi MSI 1.0.0/1.1.0.
+- [x] Đánh phiên bản 1.3.0 và tạo installer EXE kèm tệp SHA-256.
 
 ## P0 — quyết định trước khi triển khai tải
 
@@ -67,7 +71,8 @@ Ngày cập nhật: 2026-07-28.
       sidecar và GPLv3 cho private-use; chưa chấp thuận bundle/phân phối lại.
 - [ ] Xác minh chữ ký/attestation độc lập và lập third-party notices trước phát hành rộng.
 - [ ] Quyết định có hỗ trợ `yt-dlp-ejs`/JavaScript runtime hay không.
-- [x] Chọn MSI per-machine x64 làm phương thức đóng gói private-use.
+- [x] Chọn installer Inno Setup per-machine x64 làm phương thức đóng gói
+      private-use từ 1.3.0; giữ logic di trú cho MSI cũ.
 - [ ] Xác định phiên bản Windows tối thiểu và chứng thư/quy trình ký mã.
 - [ ] Hoàn thành threat model cho URL, đường dẫn, process, log và tệp tạm.
 - [x] Chính sách private-use: settings/history/log chỉ LocalApplicationData, không telemetry.
@@ -116,9 +121,11 @@ Ngày cập nhật: 2026-07-28.
       không có binary công cụ ngoài hoặc dữ liệu người dùng.
 - [x] Xác minh bảng File của MSI 1.1.0 chỉ chứa executable ứng dụng self-contained;
       giữ UpgradeCode và vượt qua kiểm tra ICE.
-- [ ] Chạy ICE validation đầy đủ và cài mới/nâng cấp/hạ cấp/gỡ MSI trên Windows sạch.
-- [ ] Ký Authenticode executable và MSI, sau đó kiểm tra Defender/SmartScreen.
-- [ ] Lập kế hoạch chuyển WiX v3.11 đã hết hỗ trợ sang phiên bản còn được hỗ trợ.
+- [x] Thay WiX v3.11 bằng Inno Setup 7.0.2 cho dòng installer 1.3.x.
+- [ ] Cài mới/nâng cấp từ MSI 1.0.0/1.1.0, chặn hạ cấp và gỡ installer 1.3.0
+      trên Windows sạch.
+- [ ] Ký Authenticode executable và installer EXE, sau đó kiểm tra Defender/SmartScreen.
+- [ ] Hoàn tất quyết định giấy phép Inno Setup nếu chuyển sang phát hành thương mại.
 - [ ] Bổ sung xác minh chữ ký GPG/release attestation cho checksum nếu phát hành rộng.
 - [ ] Smoke test gói self-contained trên Windows sạch, Defender/SmartScreen và DPI.
 

@@ -5,6 +5,11 @@ ngữ nghĩa `MAJOR.MINOR.PATCH`; xem [quy trình phát hành](docs/RELEASING.md
 
 ## [Chưa phát hành]
 
+## [1.3.0] - 2026-07-30
+
+Phiên bản bổ sung hai pipeline Video rõ ràng và thay gói MSI bằng installer
+Inno Setup có nhận diện thương hiệu.
+
 ### Đã thêm
 
 - Hai chế độ Video: “MP4 tương thích” ưu tiên H.264/AAC và chuyển đổi bằng
@@ -12,6 +17,11 @@ ngữ nghĩa `MAJOR.MINOR.PATCH`; xem [quy trình phát hành](docs/RELEASING.md
   mã hóa lại.
 - Lưu lựa chọn format trong settings/history và tự di trú cài đặt Video/MP3 cũ.
 - Kiểm thử đối số process, hủy, timeout và lỗi công cụ cho hai pipeline Video.
+- Installer EXE x64 với wizard Windows 11 hiện đại, tự theo giao diện sáng/tối,
+  artwork thương hiệu và toàn bộ nội dung tiếng Việt.
+- Lựa chọn shortcut Desktop, shortcut Start Menu, gỡ cài đặt trong Windows
+  Settings và tệp SHA-256 đi kèm.
+- Di trú tự động khỏi MSI 1.0.0/1.1.0 và chặn hạ cấp từ cả dòng MSI lẫn Inno Setup.
 
 ### Đã thay đổi
 
@@ -19,6 +29,14 @@ ngữ nghĩa `MAJOR.MINOR.PATCH`; xem [quy trình phát hành](docs/RELEASING.md
   của từng chế độ Video.
 - Bỏ ô chọn xác nhận quyền riêng; nút “Xác nhận quyền và tải xuống” vừa xác nhận
   quyền cho tác vụ mới vừa thêm nội dung vào hàng đợi.
+- Thay WiX Toolset v3.11 bằng Inno Setup 7.0.2 x64 cho quy trình đóng gói.
+
+### Gói phát hành
+
+- Installer: `SVVideoDownloader-1.3.0-win-x64-setup.exe`
+- SHA-256:
+  `CBB3EBBE4DC3DDA67D4D793574309285CA934661649303E8040C57D5C4C51A5C`
+- Installer và executable chưa được ký mã.
 
 ## [1.1.0] - 2026-07-27
 

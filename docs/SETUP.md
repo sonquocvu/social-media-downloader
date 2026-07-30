@@ -1,18 +1,24 @@
 # Thiết lập riêng trên Windows
 
-## Cài phiên bản 1.1.0 bằng MSI
+## Cài phiên bản 1.3.0
 
-1. Lấy `SVVideoDownloader-1.1.0-win-x64.msi` từ kênh tin cậy và kiểm tra SHA-256
+1. Lấy `SVVideoDownloader-1.3.0-win-x64-setup.exe` từ kênh tin cậy và kiểm tra SHA-256
    theo ghi chú phát hành.
-2. Mở MSI và chấp nhận yêu cầu quyền quản trị. Ứng dụng được cài vào
+2. Mở trình cài đặt và chấp nhận yêu cầu quyền quản trị. Ứng dụng được cài vào
    `%ProgramFiles%\SVVideoDownloader`.
-3. Mở “SV Video Downloader” từ Start Menu hoặc shortcut Desktop.
-4. Mở tab “Công cụ và cài đặt”, sau đó cài/kiểm tra yt-dlp, FFmpeg và ffprobe.
+3. Giữ hoặc bỏ lựa chọn tạo shortcut Desktop, sau đó hoàn tất wizard.
+4. Mở “SV Video Downloader” từ Start Menu hoặc shortcut Desktop.
+5. Mở tab “Công cụ và cài đặt”, sau đó cài/kiểm tra yt-dlp, FFmpeg và ffprobe.
 
-MSI là self-contained win-x64 nên máy sử dụng không cần cài .NET runtime. Gói
+Installer là self-contained win-x64 nên máy sử dụng không cần cài .NET runtime. Gói
 không chứa yt-dlp, FFmpeg, ffprobe, media, settings, history, log hoặc secret.
-MSI/executable 1.1.0 chưa được ký mã nên Defender/SmartScreen có thể cảnh báo;
+Installer/executable 1.3.0 chưa được ký mã nên Defender/SmartScreen có thể cảnh báo;
 không bỏ qua cảnh báo nếu nguồn hoặc checksum không đáng tin cậy.
+
+Khi phát hiện MSI 1.0.0 hoặc 1.1.0 đã phát hành trước đây, installer 1.3.0 tự
+gỡ gói đó trong lúc chuẩn bị cài. Nếu còn một MSI thử nghiệm không được nhận
+diện, wizard dừng và yêu cầu gỡ bản đó trong Windows Settings để tránh hai mục
+gỡ cài đặt cùng sở hữu một thư mục. Phiên bản mới hơn luôn chặn cài bản cũ.
 
 Gỡ ứng dụng trong Windows Settings sẽ xóa executable và shortcut nhưng không xóa
 `%LOCALAPPDATA%\SVVideoDownloader` hoặc media đã tải. Điều này giữ thiết lập,
@@ -22,17 +28,20 @@ lưu và thực sự không còn cần dữ liệu đó.
 ## 1. Tạo bản publish
 
 Yêu cầu trên máy phát triển: Windows x64 và .NET SDK đúng phiên bản trong
-`global.json`.
+`global.json`. Để tạo installer cần thêm Inno Setup 7.0.2 x64.
 
 ```powershell
 dotnet build .\SVVideoDownloader.sln --configuration Release
 dotnet test .\SVVideoDownloader.sln --configuration Release --no-build
 dotnet publish .\src\SVVideoDownloader.App\SVVideoDownloader.App.csproj -p:PublishProfile=win-x64
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\installer\build-installer.ps1 -NoRestore
 ```
 
 Kết quả nằm tại `artifacts\publish\win-x64`. Đây là bản self-contained win-x64,
 không yêu cầu cài .NET runtime trên máy sử dụng. Không copy công cụ media, cài
 đặt cá nhân, nhật ký hoặc tệp tải về vào thư mục publish.
+
+Installer và tệp checksum được tạo trong `artifacts\installer`.
 
 ## 2. Chạy lần đầu
 

@@ -5,7 +5,7 @@ SVVideoDownloader là ứng dụng WPF riêng tư bằng tiếng Việt dành ch
 từ nội dung công khai do người dùng sở hữu hoặc được cho phép tải trên YouTube,
 TikTok và Facebook.
 
-Phiên bản hiện tại: **1.1.0**.
+Phiên bản hiện tại: **1.3.0**.
 
 > Trạng thái hiện tại: đã sẵn sàng để thử nghiệm sử dụng riêng hằng ngày trên
 > Windows x64. Ứng dụng có cài đặt được nhớ, lịch sử tải, nhật ký chẩn đoán xoay
@@ -47,23 +47,27 @@ Gói self-contained được tạo tại `artifacts/publish/win-x64`. Máy sử 
 cần cài .NET runtime riêng. Xem [thiết lập Windows](docs/SETUP.md) và
 [khắc phục sự cố](docs/TROUBLESHOOTING.md).
 
-## Cài đặt phiên bản 1.1.0
+## Cài đặt phiên bản 1.3.0
 
 Gói cài đặt x64 được tạo tại:
 
 ```text
-artifacts\installer\SVVideoDownloader-1.1.0-win-x64.msi
+artifacts\installer\SVVideoDownloader-1.3.0-win-x64-setup.exe
 ```
 
-Mở MSI và chấp nhận yêu cầu quyền quản trị để cài vào Program Files. Gói tạo
-shortcut ở Start Menu và Desktop, hỗ trợ gỡ cài đặt trong Windows Settings và
-không yêu cầu .NET runtime riêng. yt-dlp, FFmpeg và ffprobe không nằm trong MSI;
-cài chúng thủ công từ màn hình “Công cụ và cài đặt” sau lần chạy đầu tiên.
+Mở trình cài đặt và chấp nhận yêu cầu quyền quản trị để cài vào Program Files.
+Wizard Inno Setup 7 dùng tiếng Việt, tự thích ứng giao diện sáng/tối, cho phép
+chọn shortcut Desktop, tạo shortcut Start Menu và hỗ trợ gỡ cài đặt trong
+Windows Settings. Khi nâng cấp từ MSI 1.0.0 hoặc 1.1.0, wizard tự gỡ gói MSI cũ
+trước khi cài bản mới và giữ nguyên dữ liệu LocalApplicationData.
 
-MSI/executable 1.1.0 hiện chưa được ký mã nên Defender hoặc SmartScreen có thể
+Installer/executable 1.3.0 hiện chưa được ký mã nên Defender hoặc SmartScreen có thể
 cảnh báo. Chỉ dùng artifact do bạn tự build hoặc nhận qua kênh tin cậy và kiểm
 tra SHA-256 trước khi chạy. Xem [quy trình phát hành](docs/RELEASING.md) và
 [nhật ký thay đổi](CHANGELOG.md) để tạo phiên bản mới.
+
+Trình cài đặt chỉ chứa ứng dụng self-contained; yt-dlp, FFmpeg và ffprobe được
+cài thủ công từ màn hình “Công cụ và cài đặt” sau lần chạy đầu tiên.
 
 ## Giao diện hiện có
 
@@ -103,7 +107,7 @@ xử lý URL playlist như một video trừ khi phạm vi được thay đổi 
 Xem [đặc tả sản phẩm](docs/PRODUCT_SPEC.md), [kiến trúc](docs/ARCHITECTURE.md),
 [thiết lập](docs/SETUP.md), [khắc phục sự cố](docs/TROUBLESHOOTING.md) và
 [công việc](docs/TASKS.md) trước khi mở rộng chức năng. Quy trình đánh phiên bản,
-nâng cấp MSI và phát hành nằm trong [RELEASING.md](docs/RELEASING.md).
+nâng cấp installer và phát hành nằm trong [RELEASING.md](docs/RELEASING.md).
 
 ## Dữ liệu cục bộ
 
@@ -125,6 +129,6 @@ ngầm và không xóa media khi xóa hàng đợi hoặc lịch sử.
 trước khi chọn nguồn và hình thức phân phối. Chi tiết nằm trong
 [tài liệu kiến trúc](docs/ARCHITECTURE.md#phụ-thuộc-bên-thứ-ba-và-giấy-phép).
 
-WiX Toolset v3.11 chỉ được dùng trên máy build để tạo MSI và không được nhúng
-trong sản phẩm. WiX v3 đã hết hỗ trợ cộng đồng; cần chuyển sang nhánh còn được
-hỗ trợ trước khi duy trì phát hành dài hạn.
+Inno Setup 7.0.2 x64 chỉ được dùng trên máy build để tạo installer EXE và không
+được nhúng như một công cụ runtime. Inno Setup đề nghị người dùng thương mại mua
+giấy phép; phải hoàn tất quyết định giấy phép trước khi phát hành thương mại.

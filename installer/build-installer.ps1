@@ -1,13 +1,31 @@
 [CmdletBinding()]
 param(
-    [string]$WixBinPath = "C:\Program Files (x86)\WiX Toolset v3.11\bin",
+    [string]$InnoSetupCompilerPath,
     [switch]$NoRestore,
-    [switch]$SkipMsiValidation,
     [switch]$SkipPublish
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+function Get-InnoSetupVersion {
+    param([Parameter(Mandatory)][string]$CompilerPath)
+
+    $versionText = (Get-Item -LiteralPath $CompilerPath).VersionInfo.ProductVersion
+    if ($versionText -eq "0.0.0.0") {
+        $versionSource = Join-Path (Split-Path -Parent $CompilerPath) "unins000.exe"
+        if (Test-Path -LiteralPath $versionSource -PathType Leaf) {
+            $versionText = (Get-Item -LiteralPath $versionSource).VersionInfo.ProductVersion
+        }
+    }
+
+    $versionMatch = [regex]::Match($versionText, '\d+\.\d+\.\d+')
+    if (-not $versionMatch.Success) {
+        return $null
+    }
+
+    return [version]$versionMatch.Value
+}
 
 $repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
 $versionPropsPath = Join-Path $repositoryRoot "Directory.Build.props"
@@ -15,10 +33,7 @@ $applicationProject = Join-Path $repositoryRoot "src\SVVideoDownloader.App\SVVid
 $publishDirectory = Join-Path $repositoryRoot "artifacts\publish\win-x64"
 $publishedExecutable = Join-Path $publishDirectory "SVVideoDownloader.App.exe"
 $installerDirectory = Join-Path $repositoryRoot "artifacts\installer"
-$intermediateDirectory = Join-Path $installerDirectory "obj"
-$wixSource = Join-Path $PSScriptRoot "Product.wxs"
-$candlePath = Join-Path $WixBinPath "candle.exe"
-$lightPath = Join-Path $WixBinPath "light.exe"
+$innoSource = Join-Path $PSScriptRoot "SVVideoDownloader.iss"
 
 [xml]$versionProps = Get-Content -LiteralPath $versionPropsPath -Raw -Encoding UTF8
 $versionNode = $versionProps.SelectSingleNode("/Project/PropertyGroup/VersionPrefix")
@@ -28,13 +43,41 @@ if ($null -eq $versionNode -or [string]::IsNullOrWhiteSpace($versionNode.InnerTe
 
 $productVersion = $versionNode.InnerText.Trim()
 if ($productVersion -notmatch '^\d+\.\d+\.\d+$') {
-    throw "VersionPrefix must use the major.minor.patch format required by MSI."
+    throw "VersionPrefix must use the major.minor.patch format."
 }
 
-foreach ($toolPath in @($candlePath, $lightPath)) {
-    if (-not (Test-Path -LiteralPath $toolPath -PathType Leaf)) {
-        throw "WiX Toolset was not found at: $toolPath"
+$versionParts = $productVersion.Split(".")
+
+if ([string]::IsNullOrWhiteSpace($InnoSetupCompilerPath)) {
+    $innoSetupCandidates = @()
+    $isccCommand = Get-Command ISCC.exe -ErrorAction SilentlyContinue
+    if ($null -ne $isccCommand) {
+        $innoSetupCandidates += $isccCommand.Source
     }
+
+    $innoSetupCandidates += @(
+        (Join-Path $env:ProgramFiles "Inno Setup 7\ISCC.exe"),
+        (Join-Path ${env:ProgramFiles(x86)} "Inno Setup 7\ISCC.exe"),
+        (Join-Path $env:LOCALAPPDATA "Programs\Inno Setup 7\ISCC.exe")
+    )
+
+    $InnoSetupCompilerPath = $innoSetupCandidates |
+        Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } |
+        Where-Object {
+            $candidateVersion = Get-InnoSetupVersion -CompilerPath $_
+            $null -ne $candidateVersion -and $candidateVersion -eq [version]"7.0.2"
+        } |
+        Select-Object -First 1
+}
+
+if ([string]::IsNullOrWhiteSpace($InnoSetupCompilerPath) -or
+    -not (Test-Path -LiteralPath $InnoSetupCompilerPath -PathType Leaf)) {
+    throw "Inno Setup 7 compiler was not found. Install Inno Setup 7.0.2 x64 or pass -InnoSetupCompilerPath."
+}
+
+$compilerVersion = Get-InnoSetupVersion -CompilerPath $InnoSetupCompilerPath
+if ($null -eq $compilerVersion -or $compilerVersion -ne [version]"7.0.2") {
+    throw "Inno Setup 7.0.2 is required. Found: $compilerVersion"
 }
 
 $localDotnet = Join-Path $repositoryRoot ".dotnet\dotnet.exe"
@@ -68,30 +111,41 @@ if (-not (Test-Path -LiteralPath $publishedExecutable -PathType Leaf)) {
     throw "The published executable was not found at: $publishedExecutable"
 }
 
-New-Item -ItemType Directory -Path $intermediateDirectory -Force | Out-Null
+New-Item -ItemType Directory -Path $installerDirectory -Force | Out-Null
 
-$wixObject = Join-Path $intermediateDirectory "Product.wixobj"
-$msiPath = Join-Path $installerDirectory "SVVideoDownloader-$productVersion-win-x64.msi"
+$setupPath = Join-Path $installerDirectory "SVVideoDownloader-$productVersion-win-x64-setup.exe"
+$compilerArguments = @(
+    "/Qp",
+    "/DProductVersion=$productVersion",
+    "/DVersionMajor=$($versionParts[0])",
+    "/DVersionMinor=$($versionParts[1])",
+    "/DVersionPatch=$($versionParts[2])",
+    "/DRepositoryRoot=$repositoryRoot",
+    "/DPublishDir=$publishDirectory",
+    "/DOutputDir=$installerDirectory",
+    $innoSource
+)
 
-& $candlePath -nologo -arch x64 "-dRepositoryRoot=$repositoryRoot" "-dPublishDir=$publishDirectory" "-dProductVersion=$productVersion" -out $wixObject $wixSource
+& $InnoSetupCompilerPath @compilerArguments
 if ($LASTEXITCODE -ne 0) {
-    throw "The WiX source compilation step failed."
+    throw "The Inno Setup compilation step failed."
 }
 
-$lightArguments = @("-nologo", "-spdb", "-out", $msiPath, $wixObject)
-if ($SkipMsiValidation) {
-    $lightArguments = @("-sval") + $lightArguments
+if (-not (Test-Path -LiteralPath $setupPath -PathType Leaf)) {
+    throw "The installer was not created at: $setupPath"
 }
 
-& $lightPath @lightArguments
-if ($LASTEXITCODE -ne 0) {
-    throw "The MSI link step failed."
-}
+$setupFile = Get-Item -LiteralPath $setupPath
+$hash = Get-FileHash -LiteralPath $setupPath -Algorithm SHA256
+$checksumPath = "$setupPath.sha256"
+$checksumLine = "$($hash.Hash)  $($setupFile.Name)$([Environment]::NewLine)"
+[System.IO.File]::WriteAllText(
+    $checksumPath,
+    $checksumLine,
+    [System.Text.UTF8Encoding]::new($false))
 
-$msiFile = Get-Item -LiteralPath $msiPath
-$hash = Get-FileHash -LiteralPath $msiPath -Algorithm SHA256
-
-Write-Host "Installer created: $($msiFile.FullName)"
+Write-Host "Installer created: $($setupFile.FullName)"
 Write-Host "Version: $productVersion"
-Write-Host "Size: $($msiFile.Length) bytes"
+Write-Host "Size: $($setupFile.Length) bytes"
 Write-Host "SHA-256: $($hash.Hash)"
+Write-Host "Checksum file: $checksumPath"

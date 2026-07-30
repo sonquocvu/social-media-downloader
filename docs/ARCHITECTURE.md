@@ -197,7 +197,7 @@ Ngày rà soát ban đầu: 2026-07-17. Đây không phải tư vấn pháp lý.
 | [FFmpeg/ffprobe](https://ffmpeg.org/legal.html) | Kiểm tra, ghép và chuyển đổi media | Updater private-use tải thủ công gói Release Essentials x64 từ gyan.dev; không bundle | Gyan công bố mọi build của họ là GPLv3; gói thực tế gồm nhiều thư viện/codec. Cần giữ nguồn, phiên bản, checksum và cấu hình build nếu phân phối lại; codec có thể kéo theo cân nhắc bằng sáng chế tùy nơi phân phối. |
 | [xUnit.net](https://xunit.net/) | Kiểm thử | Package phát triển | Apache License 2.0. Không phân phối trong sản phẩm runtime. |
 | `Microsoft.NET.Test.Sdk`, `coverlet.collector`, runner xUnit | Chạy/đo kiểm thử | Package phát triển | Khóa phiên bản trong project; xác minh giấy phép và security advisory khi nâng cấp. Không phân phối trong sản phẩm runtime. |
-| [WiX Toolset v3.11](https://github.com/wixtoolset/wix3) | Biên dịch gói MSI x64 | Chỉ dùng trên máy build; không nhúng vào MSI | Microsoft Reciprocal License. WiX v3 đã hết hỗ trợ cộng đồng và kho nguồn đã lưu trữ; cần lập kế hoạch chuyển sang phiên bản còn được hỗ trợ, giữ nguyên UpgradeCode và kiểm thử nâng cấp. |
+| [Inno Setup 7.0.2 x64](https://jrsoftware.org/isdl.php) | Biên dịch installer EXE x64 | Chỉ dùng trên máy build; compiler/IDE không được đưa vào sản phẩm | Inno Setup License (SPDX `InnoSetup`). Nhà phát triển đề nghị người dùng thương mại mua giấy phép, kể cả dùng nội bộ; phải chốt giấy phép trước phát hành thương mại. Runtime cài/gỡ được nhúng theo cơ chế của Inno Setup. |
 
 README chính thức của yt-dlp hiện cũng nêu JavaScript runtime/engine và `yt-dlp-ejs` là cần thiết cho hỗ trợ YouTube đầy đủ. Chưa dependency nào trong nhóm này được chấp thuận hoặc tải; đây là quyết định kiến trúc và giấy phép còn mở.
 
@@ -225,26 +225,24 @@ WPF và extract native library khi cần. Output mặc định là
 `artifacts/publish/win-x64`. Profile không copy thư mục `%LOCALAPPDATA%`, tools,
 log, history, settings hay media.
 
-## 9. Đóng gói MSI và phiên bản
+## 9. Đóng gói installer và phiên bản
 
-`Directory.Build.props` là nguồn phiên bản duy nhất cho assembly và MSI; dòng
-phát hành đầu tiên là `1.0.0`. `installer/Product.wxs` tạo gói per-machine x64
-vào Program Files, shortcut Start Menu/Desktop và mục gỡ cài đặt. MSI chỉ có
-single-file executable từ publish; công cụ ngoài và LocalApplicationData nằm
-ngoài quyền sở hữu của Windows Installer.
+`Directory.Build.props` là nguồn phiên bản duy nhất cho assembly và installer.
+Từ 1.3.0, `installer/SVVideoDownloader.iss` tạo installer Inno Setup
+per-machine x64 vào Program Files, shortcut Start Menu, shortcut Desktop tùy
+chọn và mục gỡ cài đặt. Gói chỉ lấy single-file executable từ publish; công cụ
+ngoài và LocalApplicationData không thuộc quyền sở hữu của installer.
 
-`UpgradeCode` và GUID component được giữ ổn định giữa các phiên bản. ProductCode
-và PackageCode được tạo lại ở mỗi build. `MajorUpgrade` thay bản cũ khi tăng một
-trong ba phần `MAJOR.MINOR.PATCH` và chặn downgrade. Không phát hành hai MSI khác
-nhau với cùng ProductVersion vì Windows Installer chỉ so sánh ba phần này.
-Shortcut theo máy dùng `CommonProgramsFolder` và `CommonDesktopFolder`, đồng
-thời được quảng bá qua Windows Installer để không trộn dữ liệu theo người dùng
-với component có KeyPath theo máy.
+`AppId` Inno Setup giữ ổn định giữa các phiên bản. Trước khi cài, script so sánh
+`DisplayVersion` để chặn downgrade. Để chuyển từ dòng WiX, script giữ
+`UpgradeCode` cũ, gỡ đúng ProductCode MSI 1.0.0/1.1.0 đã phát hành và dừng nếu
+phát hiện MSI khác chưa được nhận diện. Cách này tránh hai cơ chế gỡ cài đặt
+cùng sở hữu một thư mục mà không chạm dữ liệu LocalApplicationData.
 
-Build hiện dùng WiX v3.11 cài ngoài repository. Script mặc định chạy ICE; tùy
-chọn `-SkipMsiValidation` chỉ dành cho môi trường hạn chế và artifact phải được
-kiểm tra lại trên Windows Installer thực trước khi phát hành. Executable phải
-được ký trước khi đóng gói, sau đó ký MSI; phiên bản 1.1.0 hiện chưa ký.
+Wizard dùng bản dịch tiếng Việt sở hữu trong repository, style Windows 11 hiện
+đại tự theo sáng/tối và artwork thương hiệu riêng. Build yêu cầu Inno Setup
+7.0.2 x64 cài ngoài repository. Executable phải được ký trước khi đóng gói, sau
+đó ký installer; phiên bản 1.3.0 hiện chưa ký.
 
 ## 10. Quyết định kiến trúc đã ghi nhận
 
@@ -257,8 +255,9 @@ kiểm tra lại trên Windows Installer thực trước khi phát hành. Execut
   yêu cầu, có checksum và rollback; FFmpeg cần xác nhận nguồn/GPLv3 trước mỗi lần.
 - ADR tạm thời 007: dùng bảng màu WPF nội bộ và `DynamicResource`, không thêm UI framework
   bên thứ ba; lựa chọn sáng/tối được nhớ trong LocalApplicationData.
-- ADR tạm thời 008: private-use dùng MSI per-machine x64 với UpgradeCode ổn định;
-  gỡ/nâng cấp ứng dụng không sở hữu hoặc xóa LocalApplicationData và media.
+- ADR tạm thời 008: 1.0.0/1.1.0 dùng MSI per-machine x64; từ 1.3.0 chuyển sang
+  Inno Setup per-machine x64 với AppId ổn định và di trú MSI có kiểm soát.
+  Gỡ/nâng cấp ứng dụng không sở hữu hoặc xóa LocalApplicationData và media.
 - ADR tạm thời 009: MP4 tương thích là mặc định và ưu tiên H.264/AAC; nếu
   container cuối khác MP4 thì yt-dlp gọi FFmpeg qua `--recode-video mp4`.
   Chất lượng gốc không mã hóa lại và chấp nhận container nguồn/merge do yt-dlp
@@ -289,7 +288,8 @@ Các ADR trên cần tách thành tài liệu riêng nếu phạm vi hoặc nhó
 - Logger dùng redaction theo mẫu; chuỗi secret có định dạng mới vẫn có thể lọt qua.
 - Self-contained single-file và updater cần smoke test trên Windows sạch, Defender,
   SmartScreen và thư mục có chính sách bảo vệ thực tế.
-- MSI 1.1.0 và executable chưa ký; ICE đã chạy thành công, nhưng chưa kiểm tra cài
-  mới/nâng cấp/hạ cấp/gỡ cài đặt trên máy Windows sạch.
-- WiX v3.11 đã hết hỗ trợ; việc chuyển phiên bản công cụ có thể làm thay đổi output
-  MSI và phải được kiểm thử mà không phá vỡ upgrade identity.
+- Installer 1.3.0 và executable chưa ký; cần kiểm tra cài mới, di trú MSI,
+  nâng cấp, hạ cấp và gỡ cài đặt trên Windows sạch.
+- Di trú chỉ tự động gỡ hai MSI đã phát hành 1.0.0/1.1.0; MSI thử nghiệm khác
+  phải được gỡ thủ công để tránh ownership chồng chéo.
+- Chưa hoàn tất quyết định giấy phép Inno Setup cho phát hành thương mại.
