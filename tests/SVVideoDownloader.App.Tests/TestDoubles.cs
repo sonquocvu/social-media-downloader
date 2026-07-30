@@ -248,7 +248,8 @@ internal static class TestData
         FakeToolManagementService? tools = null,
         FakeThemeService? themes = null,
         QualityPreset defaultQuality = QualityPreset.Best,
-        ApplicationTheme defaultTheme = ApplicationTheme.Light) =>
+        ApplicationTheme defaultTheme = ApplicationTheme.Light,
+        DownloadMediaFormat? defaultFormat = null) =>
         new(
             metadata ?? new FakeMetadataProvider(),
             downloads ?? new FakeDownloadCoordinator(),
@@ -259,5 +260,12 @@ internal static class TestData
             tools ?? new FakeToolManagementService(),
             themes ?? new FakeThemeService(),
             new FakeDiagnosticLogger(),
-            new AppUiOptions(OutputFolder, defaultQuality, defaultTheme));
+            new AppUiOptions(
+                OutputFolder,
+                defaultQuality,
+                defaultTheme,
+                defaultFormat ??
+                    (defaultQuality == QualityPreset.AudioMp3
+                        ? DownloadMediaFormat.AudioMp3
+                        : DownloadMediaFormat.VideoMp4)));
 }

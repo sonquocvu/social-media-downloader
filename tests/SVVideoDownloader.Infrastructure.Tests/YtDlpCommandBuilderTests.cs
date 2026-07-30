@@ -1,3 +1,4 @@
+using SVVideoDownloader.Core.Downloads;
 using SVVideoDownloader.Core.Videos;
 using SVVideoDownloader.Infrastructure.YtDlp;
 
@@ -155,6 +156,28 @@ public sealed class YtDlpCommandBuilderTests
         Assert.Equal("mp4", arguments[recodeVideoIndex + 1]);
         Assert.Equal(1, arguments.Count(argument => argument == "--format-sort"));
         Assert.Equal(1, arguments.Count(argument => argument == "--recode-video"));
+        Assert.DoesNotContain("--extract-audio", arguments);
+        Assert.DoesNotContain("--audio-format", arguments);
+        Assert.DoesNotContain("--audio-quality", arguments);
+    }
+
+    [Theory]
+    [InlineData(QualityPreset.Best)]
+    [InlineData(QualityPreset.Video1080p)]
+    [InlineData(QualityPreset.Video720p)]
+    [InlineData(QualityPreset.Video480p)]
+    public void OriginalVideoDownloadRequestKeepsBestSourceStreamsWithoutConversion(
+        QualityPreset preset)
+    {
+        var request = YtDlpCommandBuilder.BuildDownloadRequest(
+            TestData.CreateOptions(),
+            TestData.CreateRequest(
+                preset,
+                mediaFormat: DownloadMediaFormat.VideoOriginal));
+        var arguments = request.ArgumentList.ToList();
+
+        Assert.DoesNotContain("--format-sort", arguments);
+        Assert.DoesNotContain("--recode-video", arguments);
         Assert.DoesNotContain("--extract-audio", arguments);
         Assert.DoesNotContain("--audio-format", arguments);
         Assert.DoesNotContain("--audio-quality", arguments);

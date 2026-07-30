@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
@@ -48,6 +49,13 @@ public sealed class MainWindowXamlTests
                     window.FindName("YtDlpUpdatePanel"));
                 var ffmpegUpdatePanel = Assert.IsType<Border>(
                     window.FindName("FfmpegUpdatePanel"));
+                var downloadButton = Assert.IsType<Button>(
+                    window.FindName("DownloadButton"));
+                var rightsConfirmationBinding = FindDescendants<CheckBox>(window)
+                    .Select(checkBox => BindingOperations.GetBinding(
+                        checkBox,
+                        System.Windows.Controls.Primitives.ToggleButton.IsCheckedProperty))
+                    .FirstOrDefault(binding => binding?.Path.Path == "RightsConfirmed");
 
                 Assert.NotNull(binding);
                 Assert.Equal(BindingMode.OneWay, binding.Mode);
@@ -70,6 +78,11 @@ public sealed class MainWindowXamlTests
                 Assert.Equal(
                     new UIElement[] { ytDlpUpdatePanel, ffmpegUpdatePanel },
                     updateActionsPanel.Children.Cast<UIElement>());
+                Assert.Null(rightsConfirmationBinding);
+                Assert.Equal("_Xác nhận quyền và tải xuống", downloadButton.Content);
+                Assert.Equal(
+                    "Xác nhận bạn có quyền tải nội dung rồi thêm vào hàng đợi",
+                    AutomationProperties.GetHelpText(downloadButton));
 
                 var themeService = new WpfThemeService(application);
                 themeService.Apply(ApplicationTheme.Dark);

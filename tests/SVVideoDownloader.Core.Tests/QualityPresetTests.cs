@@ -28,8 +28,54 @@ public sealed class QualityPresetTests
 
         Assert.True(result.IsSuccess);
         var options = Assert.IsType<DownloadOptions>(result.Value);
+        Assert.Equal(DownloadMediaFormat.VideoMp4, options.MediaFormat);
         Assert.Equal(QualityPreset.Video1080p, options.QualityPreset);
         Assert.Equal("Bản quay_ 1080p.mp4", options.OutputFileName);
+    }
+
+    [Theory]
+    [InlineData(DownloadMediaFormat.VideoMp4, QualityPreset.Best)]
+    [InlineData(DownloadMediaFormat.VideoOriginal, QualityPreset.Video1080p)]
+    [InlineData(DownloadMediaFormat.AudioMp3, QualityPreset.AudioMp3)]
+    public void DownloadOptionsStoresCompatibleMediaFormat(
+        DownloadMediaFormat mediaFormat,
+        QualityPreset qualityPreset)
+    {
+        var result = DownloadOptions.Create(mediaFormat, qualityPreset, "Tệp của tôi");
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(mediaFormat, result.Value!.MediaFormat);
+        Assert.Equal(qualityPreset, result.Value.QualityPreset);
+    }
+
+    [Theory]
+    [InlineData(DownloadMediaFormat.VideoMp4, QualityPreset.AudioMp3)]
+    [InlineData(DownloadMediaFormat.VideoOriginal, QualityPreset.AudioMp3)]
+    [InlineData(DownloadMediaFormat.AudioMp3, QualityPreset.Best)]
+    public void DownloadOptionsRejectsIncompatibleMediaFormatAndQuality(
+        DownloadMediaFormat mediaFormat,
+        QualityPreset qualityPreset)
+    {
+        var result = DownloadOptions.Create(mediaFormat, qualityPreset, "video");
+
+        Assert.False(result.IsSuccess);
+        var error = Assert.Single(result.Errors);
+        Assert.Equal(ValidationErrorCode.InvalidValue, error.Code);
+        Assert.Equal("MediaFormat", error.Field);
+    }
+
+    [Fact]
+    public void DownloadOptionsRejectsUnknownMediaFormat()
+    {
+        var result = DownloadOptions.Create(
+            (DownloadMediaFormat)999,
+            QualityPreset.Best,
+            "video");
+
+        Assert.False(result.IsSuccess);
+        var error = Assert.Single(result.Errors);
+        Assert.Equal(ValidationErrorCode.InvalidValue, error.Code);
+        Assert.Equal("MediaFormat", error.Field);
     }
 
     [Fact]

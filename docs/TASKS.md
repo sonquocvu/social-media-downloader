@@ -47,9 +47,9 @@ Ngày cập nhật: 2026-07-28.
       số trích xuất/chuyển đổi MP3 tại ranh giới process.
 - [x] Mã hóa MP3 bằng mức chất lượng VBR cao nhất của yt-dlp/FFmpeg và kiểm thử
       `--audio-quality 0` không được áp dụng cho tải Video.
-- [x] Chuẩn hóa đầu ra Video thành MP4: ưu tiên codec H.264/AAC, chỉ mã hóa lại
-      bằng FFmpeg khi container cuối chưa là MP4; kiểm thử đối số, hủy, timeout
-      và ánh xạ lỗi không làm lộ output chẩn đoán.
+- [x] Thêm hai chế độ Video: MP4 tương thích ưu tiên H.264/AAC và chuyển đổi khi
+      cần; chất lượng gốc giữ luồng tốt nhất không mã hóa lại. Nhớ lựa chọn, di
+      trú cài đặt cũ và kiểm thử đối số, hủy, timeout, ánh xạ lỗi.
 - [x] Xếp dọc các thẻ quản lý yt-dlp/FFmpeg và tắt cuộn ngang trên trang Công cụ
       và cài đặt.
 - [x] Sửa thư mục và kiểu shortcut MSI theo máy để vượt qua ICE38/ICE43/ICE57.
@@ -93,7 +93,8 @@ Ngày cập nhật: 2026-07-28.
 
 ## P1 — giao diện
 
-- [x] Thiết kế luồng dán URL, xác nhận quyền, chọn chất lượng/thư mục và tải.
+- [x] Thiết kế luồng dán URL, chọn chất lượng/thư mục và dùng hành động tải làm xác
+      nhận quyền cho từng tác vụ, không cần ô chọn riêng.
 - [x] Thêm validation, tiến độ, hủy, thử lại và thông báo lỗi bằng tiếng Việt.
 - [x] Thêm nhãn accessibility, access key, thứ tự bàn phím, cuộn và bố cục co giãn
       cơ bản cho mức 125%/150%.

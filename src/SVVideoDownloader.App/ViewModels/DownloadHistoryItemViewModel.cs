@@ -26,6 +26,8 @@ public sealed class DownloadHistoryItemViewModel : ViewModelBase
 
     public string SourceText => DisplayFormatter.GetPlatformName(Entry.Platform);
 
+    public string FormatText => DisplayFormatter.GetMediaFormatName(Entry.Format, Entry.Quality);
+
     public string QualityText => DisplayFormatter.GetQualityName(Entry.Quality);
 
     public string CompletedAtText => Entry.CompletedAtUtc

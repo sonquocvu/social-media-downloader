@@ -7,13 +7,18 @@ ngữ nghĩa `MAJOR.MINOR.PATCH`; xem [quy trình phát hành](docs/RELEASING.md
 
 ### Đã thêm
 
-- Đầu ra MP4 cho mọi preset Video: ưu tiên H.264/AAC và dùng FFmpeg chuyển đổi
-  khi tệp tải về chưa ở container MP4.
-- Kiểm thử đối số process, hủy, timeout và lỗi công cụ cho pipeline MP4.
+- Hai chế độ Video: “MP4 tương thích” ưu tiên H.264/AAC và chuyển đổi bằng
+  FFmpeg khi cần; “Chất lượng gốc tốt nhất” giữ luồng nguồn tốt nhất mà không
+  mã hóa lại.
+- Lưu lựa chọn format trong settings/history và tự di trú cài đặt Video/MP3 cũ.
+- Kiểm thử đối số process, hủy, timeout và lỗi công cụ cho hai pipeline Video.
 
 ### Đã thay đổi
 
-- Nhãn loại tệp Video trong giao diện được đổi thành “MP4 (video)”.
+- Giao diện giải thích khả năng tương thích, chuyển đổi và phần mở rộng có thể có
+  của từng chế độ Video.
+- Bỏ ô chọn xác nhận quyền riêng; nút “Xác nhận quyền và tải xuống” vừa xác nhận
+  quyền cho tác vụ mới vừa thêm nội dung vào hàng đợi.
 
 ## [1.1.0] - 2026-07-27
 

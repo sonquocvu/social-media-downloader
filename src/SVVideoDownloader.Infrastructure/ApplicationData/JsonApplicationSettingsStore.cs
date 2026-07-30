@@ -1,4 +1,5 @@
 using System.Text.Json;
+using SVVideoDownloader.Core.Downloads;
 using SVVideoDownloader.Core.Videos;
 using SVVideoDownloader.Infrastructure.Diagnostics;
 
@@ -72,7 +73,21 @@ public sealed class JsonApplicationSettingsStore(
         var settings = JsonSerializer.Deserialize<ApplicationSettings>(
             json,
             JsonStoreHelpers.SerializerOptions);
-        return IsValid(settings) ? settings! : defaults;
+        var migratedSettings = Migrate(settings);
+        return IsValid(migratedSettings) ? migratedSettings! : defaults;
+    }
+
+    private static ApplicationSettings? Migrate(ApplicationSettings? settings)
+    {
+        if (settings is null || settings.DefaultFormat is not null)
+        {
+            return settings;
+        }
+
+        var migratedFormat = settings.DefaultQuality == QualityPreset.AudioMp3
+            ? DownloadMediaFormat.AudioMp3
+            : DownloadMediaFormat.VideoMp4;
+        return settings with { DefaultFormat = migratedFormat };
     }
 
     private static void Validate(ApplicationSettings settings)
@@ -94,6 +109,9 @@ public sealed class JsonApplicationSettingsStore(
             QualityPreset.Video720p or
             QualityPreset.Video480p or
             QualityPreset.AudioMp3 &&
+        settings.DefaultFormat is { } format &&
+        Enum.IsDefined(format) &&
+        format.IsCompatibleWith(settings.DefaultQuality) &&
         Enum.IsDefined(settings.Theme) &&
         settings.Theme is ApplicationTheme.Light or ApplicationTheme.Dark;
 

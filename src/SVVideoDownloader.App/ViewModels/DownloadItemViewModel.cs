@@ -46,6 +46,7 @@ public sealed class DownloadItemViewModel : ViewModelBase, IDisposable
 
         Title = videoInfo.Title;
         Platform = videoInfo.Source.Platform;
+        Format = request.Options.MediaFormat;
         Quality = request.Options.QualityPreset;
         SourceText = DisplayFormatter.GetPlatformName(videoInfo.Source.Platform);
         OutputFolder = outputFolder;
@@ -64,6 +65,8 @@ public sealed class DownloadItemViewModel : ViewModelBase, IDisposable
     public Guid Id { get; } = Guid.NewGuid();
 
     public SupportedPlatform Platform { get; }
+
+    public DownloadMediaFormat Format { get; }
 
     public QualityPreset Quality { get; }
 

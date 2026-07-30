@@ -27,10 +27,13 @@ internal static class TestData
     public static DownloadRequest CreateRequest(
         QualityPreset preset = QualityPreset.Best,
         string outputFileName = "video của tôi.mp4",
-        string url = "https://www.youtube.com/watch?v=owned-video")
+        string url = "https://www.youtube.com/watch?v=owned-video",
+        DownloadMediaFormat? mediaFormat = null)
     {
         var options = Assert.IsType<DownloadOptions>(
-            DownloadOptions.Create(preset, outputFileName).Value);
+            mediaFormat is null
+                ? DownloadOptions.Create(preset, outputFileName).Value
+                : DownloadOptions.Create(mediaFormat.Value, preset, outputFileName).Value);
         return Assert.IsType<DownloadRequest>(
             DownloadRequest.Create(CreateSource(url), options, true).Value);
     }

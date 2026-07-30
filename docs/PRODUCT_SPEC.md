@@ -22,8 +22,8 @@ phép người dùng chủ động cài/cập nhật yt-dlp và gói FFmpeg/ffpr
 ## 3. Mục tiêu sản phẩm
 
 - Nhận một URL HTTPS thuộc YouTube, TikTok hoặc Facebook.
-- Cho người dùng chọn tải tệp Video MP4 hoặc MP3; khi tải Video có thể chọn chất
-  lượng hợp lệ mà nguồn công khai cung cấp.
+- Cho người dùng chọn Video MP4 tương thích, Video giữ chất lượng gốc tốt nhất
+  hoặc MP3; khi tải Video có thể chọn chất lượng hợp lệ mà nguồn công khai cung cấp.
 - Tải xuống với tiến độ, khả năng hủy và thông báo lỗi bằng tiếng Việt.
 - Dùng `yt-dlp`, `ffmpeg` và `ffprobe` dưới dạng executable ngoài tiến trình.
 - Giữ lịch sử tối thiểu và bảo vệ dữ liệu riêng tư theo mặc định.
@@ -43,9 +43,10 @@ phép người dùng chủ động cài/cập nhật yt-dlp và gói FFmpeg/ffpr
 
 1. Người dùng dán liên kết HTTPS.
 2. Ứng dụng nhận diện nền tảng và kiểm tra cấu trúc URL.
-3. Người dùng xác nhận mình sở hữu nội dung hoặc có quyền tải.
-4. Ứng dụng truy vấn metadata công khai qua `yt-dlp`.
-5. Người dùng chọn chất lượng, định dạng và thư mục đích.
+3. Ứng dụng truy vấn metadata công khai qua `yt-dlp`.
+4. Người dùng chọn chất lượng, định dạng và thư mục đích.
+5. Người dùng bấm “Xác nhận quyền và tải xuống”; thao tác này xác nhận họ sở hữu
+   nội dung hoặc có quyền tải.
 6. Ứng dụng tải, ghép/chuyển đổi khi cần và hiển thị tiến độ.
 7. Ứng dụng thông báo kết quả bằng tiếng Việt và cho phép mở thư mục chứa tệp.
 
@@ -56,7 +57,8 @@ tệp trùng và phân phối binary vẫn phải được phê duyệt trước
 
 - FR-01: Chấp nhận URL HTTPS hợp lệ của đúng ba nền tảng được hỗ trợ.
 - FR-02: Từ chối host giả mạo dạng `youtube.com.example.org` và URL chứa thông tin đăng nhập.
-- FR-03: Yêu cầu người dùng xác nhận quyền trước mỗi tác vụ tải.
+- FR-03: Mỗi lần bấm hành động “Xác nhận quyền và tải xuống” là một xác nhận quyền
+  cho tác vụ mới; không dùng ô chọn xác nhận riêng.
 - FR-04: Không thêm cờ `yt-dlp` cho phép vượt DRM hoặc sử dụng thông tin xác thực ngoài luồng được duyệt.
 - FR-05: Hiển thị metadata, lựa chọn định dạng, tiến độ, trạng thái ghép và lỗi bằng tiếng Việt.
 - FR-06: Cho phép hủy an toàn và dọn tệp tạm theo chính sách đã thống nhất.
@@ -75,10 +77,12 @@ tệp trùng và phân phối binary vẫn phải được phê duyệt trước
   minh cả hai executable và rollback theo cặp nếu thay thế/hậu kiểm thất bại.
 - FR-16: Cung cấp MSI x64 có phiên bản và hỗ trợ cài mới, nâng cấp, chặn hạ cấp,
   gỡ ứng dụng mà không xóa LocalApplicationData hoặc media của người dùng.
-- FR-17: Sau khi phân tích liên kết, cho phép chọn rõ loại tệp MP4 (video) hoặc
-  MP3 (âm thanh). Chất lượng chỉ áp dụng cho Video; luồng Video ưu tiên codec
-  H.264/AAC và kết quả khác container MP4 được chuyển bằng FFmpeg
-  (`--recode-video mp4`). MP3 dùng luồng âm thanh tốt nhất và chuyển đổi bằng
+- FR-17: Sau khi phân tích liên kết, cho phép chọn rõ MP4 tương thích, chất lượng
+  gốc tốt nhất hoặc MP3 (âm thanh). Chất lượng chỉ áp dụng cho Video. MP4 tương
+  thích ưu tiên H.264/AAC và chuyển kết quả khác container MP4 bằng FFmpeg
+  (`--recode-video mp4`). Chất lượng gốc dùng các luồng tốt nhất trong giới hạn
+  độ phân giải đã chọn, không sắp xếp codec hoặc mã hóa lại; phần mở rộng có thể
+  là MP4, WebM hoặc MKV. MP3 dùng luồng âm thanh tốt nhất và chuyển đổi bằng
   FFmpeg ở mức chất lượng VBR cao nhất (`--audio-quality 0`).
 
 ## 7. Yêu cầu phi chức năng

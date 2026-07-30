@@ -5,6 +5,7 @@ using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using SVVideoDownloader.App.Services;
 using SVVideoDownloader.App.ViewModels;
+using SVVideoDownloader.Core.Downloads;
 using SVVideoDownloader.Core.Media;
 using SVVideoDownloader.Core.Videos;
 using SVVideoDownloader.Infrastructure.ApplicationData;
@@ -45,7 +46,8 @@ public partial class App : Application
             var defaults = new ApplicationSettings(
                 defaultOutputFolder,
                 QualityPreset.Best,
-                ApplicationTheme.Light);
+                ApplicationTheme.Light,
+                DownloadMediaFormat.VideoMp4);
             var settings = await _settingsStore.LoadAsync(defaults);
             var themeService = new WpfThemeService(this);
             themeService.Apply(settings.Theme);
@@ -58,7 +60,8 @@ public partial class App : Application
             services.AddSingleton(new AppUiOptions(
                 settings.DownloadDirectory,
                 settings.DefaultQuality,
-                settings.Theme));
+                settings.Theme,
+                settings.DefaultFormat!.Value));
             services.AddSingleton<IThemeService>(themeService);
             services.AddSingleton<IApplicationSettingsStore>(_settingsStore);
             services.AddSingleton<IDownloadHistoryStore>(_historyStore);

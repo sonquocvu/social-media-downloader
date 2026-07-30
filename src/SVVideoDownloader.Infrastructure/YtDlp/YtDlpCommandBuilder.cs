@@ -58,20 +58,28 @@ internal static class YtDlpCommandBuilder
             GetFormatSelector(request.Options.QualityPreset),
         };
 
-        if (request.Options.QualityPreset == QualityPreset.AudioMp3)
+        switch (request.Options.MediaFormat)
         {
-            arguments.Add("--extract-audio");
-            arguments.Add("--audio-format");
-            arguments.Add("mp3");
-            arguments.Add("--audio-quality");
-            arguments.Add("0");
-        }
-        else
-        {
-            arguments.Add("--format-sort");
-            arguments.Add(Mp4FormatSort);
-            arguments.Add("--recode-video");
-            arguments.Add("mp4");
+            case DownloadMediaFormat.AudioMp3:
+                arguments.Add("--extract-audio");
+                arguments.Add("--audio-format");
+                arguments.Add("mp3");
+                arguments.Add("--audio-quality");
+                arguments.Add("0");
+                break;
+            case DownloadMediaFormat.VideoMp4:
+                arguments.Add("--format-sort");
+                arguments.Add(Mp4FormatSort);
+                arguments.Add("--recode-video");
+                arguments.Add("mp4");
+                break;
+            case DownloadMediaFormat.VideoOriginal:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(
+                    nameof(request),
+                    request.Options.MediaFormat,
+                    null);
         }
 
         arguments.Add("--output");

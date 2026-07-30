@@ -41,9 +41,11 @@ SVVideoDownloader.Core <--- SVVideoDownloader.Infrastructure
   credential hoặc hành vi playlist. `--no-playlist` giữ phạm vi một video cho MVP.
 - FFmpeg/ffprobe được kiểm tra bằng `-version`; thư mục chứa hai binary được
   truyền cho yt-dlp bằng `--ffmpeg-location`.
-- Preset Video giữ giới hạn độ phân giải trong Core nhưng Infrastructure ưu tiên
-  H.264/AAC bằng `--format-sort` và dùng `--recode-video mp4`; yt-dlp bỏ qua
-  bước mã hóa lại khi tệp cuối đã là MP4. Preset MP3 không nhận các đối số Video.
+- Core tách `DownloadMediaFormat` khỏi `QualityPreset`. Với MP4 tương thích,
+  Infrastructure ưu tiên H.264/AAC bằng `--format-sort` và dùng
+  `--recode-video mp4`; yt-dlp bỏ qua bước mã hóa lại khi tệp cuối đã là MP4.
+  Chất lượng gốc giữ selector chất lượng nhưng không thêm sắp xếp codec hoặc
+  chuyển đổi container. Preset MP3 không nhận các đối số Video.
 - Sở hữu persistence JSON dưới `LocalApplicationData`, lịch sử giới hạn 500 mục,
   logger xoay vòng/redaction, kiểm tra trạng thái công cụ và các updater thủ công.
 - Updater tải artifact/checksum qua HTTPS vào tệp tạm, kiểm tra SHA-256 và phiên
@@ -60,11 +62,15 @@ SVVideoDownloader.Core <--- SVVideoDownloader.Infrastructure
   và implementation Infrastructure.
 - Có màn hình phân tích, tùy chọn tải và hàng đợi. Thao tác filesystem/process từ
   ViewModel đi qua dịch vụ bất đồng bộ; hộp thoại xác nhận đóng cửa sổ vẫn là view concern.
-- Giao diện tách lựa chọn loại tệp MP4 (video)/MP3 (âm thanh) khỏi chất lượng
-  video. ViewModel ánh xạ lựa chọn MP3 sang preset Core `AudioMp3`;
-  Infrastructure chuyển preset này thành
-  `--extract-audio --audio-format mp3 --audio-quality 0`, còn các preset Video
-  thành đầu ra MP4, không đưa cú pháp `yt-dlp` vào App/Core.
+- Giao diện không giữ trạng thái ô chọn xác nhận quyền. Lệnh “Xác nhận quyền và tải
+  xuống” là sự kiện xác nhận cho từng yêu cầu và truyền `rightsConfirmed: true` vào
+  quy tắc Core; Core vẫn từ chối yêu cầu chưa được xác nhận.
+- Giao diện tách ba lựa chọn MP4 tương thích/chất lượng gốc tốt nhất/MP3 khỏi
+  chất lượng video. ViewModel ánh xạ MP3 sang format Core `AudioMp3` cùng preset
+  tương thích; Infrastructure chuyển thành
+  `--extract-audio --audio-format mp3 --audio-quality 0`, không đưa cú pháp
+  `yt-dlp` vào App/Core. Cài đặt cũ chưa có format được di trú từ
+  `QualityPreset.AudioMp3`; Video cũ mặc định thành MP4 tương thích.
 - `DownloadCoordinator` tạo cấu hình Infrastructure theo thư mục đích của từng tác
   vụ mà không đưa khái niệm filesystem vào Core.
 - `EngineOperationGate` loại trừ cập nhật engine với metadata/download; updater
@@ -253,9 +259,10 @@ kiểm tra lại trên Windows Installer thực trước khi phát hành. Execut
   bên thứ ba; lựa chọn sáng/tối được nhớ trong LocalApplicationData.
 - ADR tạm thời 008: private-use dùng MSI per-machine x64 với UpgradeCode ổn định;
   gỡ/nâng cấp ứng dụng không sở hữu hoặc xóa LocalApplicationData và media.
-- ADR tạm thời 009: mọi preset Video tạo tệp MP4; ưu tiên H.264/AAC để tránh mã
-  hóa lại khi nguồn phù hợp, nếu container cuối khác MP4 thì yt-dlp gọi FFmpeg
-  qua `--recode-video mp4`. MP3 giữ pipeline riêng.
+- ADR tạm thời 009: MP4 tương thích là mặc định và ưu tiên H.264/AAC; nếu
+  container cuối khác MP4 thì yt-dlp gọi FFmpeg qua `--recode-video mp4`.
+  Chất lượng gốc không mã hóa lại và chấp nhận container nguồn/merge do yt-dlp
+  chọn. MP3 giữ pipeline riêng.
 
 Các ADR trên cần tách thành tài liệu riêng nếu phạm vi hoặc nhóm phát triển mở rộng.
 

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using SVVideoDownloader.Core.Downloads;
 using SVVideoDownloader.Infrastructure.Diagnostics;
 
 namespace SVVideoDownloader.Infrastructure.ApplicationData;
@@ -128,6 +129,9 @@ public sealed class JsonDownloadHistoryStore(
         Path.IsPathFullyQualified(entry.FilePath) &&
         Enum.IsDefined(entry.Platform) &&
         Enum.IsDefined(entry.Quality) &&
+        (entry.Format is null ||
+            Enum.IsDefined(entry.Format.Value) &&
+            entry.Format.Value.IsCompatibleWith(entry.Quality)) &&
         entry.CompletedAtUtc != default;
 
     private static bool IsStorageException(Exception exception) =>

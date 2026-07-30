@@ -1,4 +1,5 @@
 using System.Globalization;
+using SVVideoDownloader.Core.Downloads;
 using SVVideoDownloader.Core.Videos;
 
 namespace SVVideoDownloader.App.ViewModels;
@@ -54,6 +55,18 @@ internal static class DisplayFormatter
         QualityPreset.Video720p => "Video 720p",
         QualityPreset.Video480p => "Video 480p",
         QualityPreset.AudioMp3 => "Âm thanh MP3",
+        _ => "Không xác định",
+    };
+
+    public static string GetMediaFormatName(
+        DownloadMediaFormat? format,
+        QualityPreset quality) => format switch
+    {
+        DownloadMediaFormat.VideoMp4 => "MP4 tương thích",
+        DownloadMediaFormat.VideoOriginal => "Chất lượng gốc tốt nhất",
+        DownloadMediaFormat.AudioMp3 => "MP3 (âm thanh)",
+        null when quality == QualityPreset.AudioMp3 => "MP3 (âm thanh)",
+        null => "Video (không xác định)",
         _ => "Không xác định",
     };
 }

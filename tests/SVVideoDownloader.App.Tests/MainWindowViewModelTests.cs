@@ -20,8 +20,20 @@ public sealed class MainWindowViewModelTests
         Assert.False(viewModel.AnalyzeCommand.CanExecute(null));
         Assert.False(viewModel.DownloadCommand.CanExecute(null));
         Assert.False(viewModel.UpdateFfmpegCommand.CanExecute(null));
-        Assert.Equal(DownloadFormat.Video, viewModel.SelectedDownloadFormat?.Format);
-        Assert.Equal("MP4 (video)", viewModel.SelectedDownloadFormat?.DisplayName);
+        Assert.Equal(
+            new[]
+            {
+                DownloadMediaFormat.VideoMp4,
+                DownloadMediaFormat.VideoOriginal,
+                DownloadMediaFormat.AudioMp3,
+            },
+            viewModel.DownloadFormatOptions.Select(item => item.Format));
+        Assert.Equal(
+            DownloadMediaFormat.VideoMp4,
+            viewModel.SelectedDownloadFormat?.Format);
+        Assert.Equal("MP4 tương thích", viewModel.SelectedDownloadFormat?.DisplayName);
+        Assert.True(viewModel.IsMp4FormatSelected);
+        Assert.False(viewModel.IsOriginalFormatSelected);
         Assert.Equal("Tốt nhất", viewModel.SelectedQuality?.DisplayName);
     }
 
@@ -31,10 +43,29 @@ public sealed class MainWindowViewModelTests
         using var viewModel = TestData.CreateMainViewModel(
             defaultQuality: QualityPreset.AudioMp3);
 
-        Assert.Equal(DownloadFormat.Mp3, viewModel.SelectedDownloadFormat?.Format);
+        Assert.Equal(
+            DownloadMediaFormat.AudioMp3,
+            viewModel.SelectedDownloadFormat?.Format);
         Assert.True(viewModel.IsMp3FormatSelected);
         Assert.False(viewModel.IsVideoFormatSelected);
         Assert.Equal(QualityPreset.Best, viewModel.SelectedQuality?.Preset);
+    }
+
+    [Fact]
+    public void InitialState_UsesRememberedOriginalQualityFormat()
+    {
+        using var viewModel = TestData.CreateMainViewModel(
+            defaultQuality: QualityPreset.Video1080p,
+            defaultFormat: DownloadMediaFormat.VideoOriginal);
+
+        Assert.Equal(
+            DownloadMediaFormat.VideoOriginal,
+            viewModel.SelectedDownloadFormat?.Format);
+        Assert.True(viewModel.IsVideoFormatSelected);
+        Assert.True(viewModel.IsOriginalFormatSelected);
+        Assert.False(viewModel.IsMp4FormatSelected);
+        Assert.False(viewModel.IsMp3FormatSelected);
+        Assert.Equal(QualityPreset.Video1080p, viewModel.SelectedQuality?.Preset);
     }
 
     [Fact]
@@ -87,6 +118,7 @@ public sealed class MainWindowViewModelTests
         var history = Assert.Single(viewModel.DownloadHistory);
         Assert.Equal("Video cũ", history.Title);
         Assert.Equal("Facebook", history.SourceText);
+        Assert.Equal("Video (không xác định)", history.FormatText);
         Assert.All(viewModel.ToolStatuses, item => Assert.Equal("Sẵn sàng", item.StatusText));
         Assert.Equal("Tất cả công cụ đã sẵn sàng.", viewModel.ToolsMessage);
     }
@@ -105,7 +137,7 @@ public sealed class MainWindowViewModelTests
     }
 
     [Fact]
-    public async Task Analyze_SuccessShowsMetadataAndEnablesDownloadAfterConfirmation()
+    public async Task Analyze_SuccessShowsMetadataAndEnablesConfirmAndDownloadAction()
     {
         var metadata = new FakeMetadataProvider
         {
@@ -122,10 +154,6 @@ public sealed class MainWindowViewModelTests
         Assert.Equal("YouTube", viewModel.VideoSource);
         Assert.Equal("1:30", viewModel.VideoDuration);
         Assert.True(viewModel.HasThumbnail);
-        Assert.False(viewModel.CanDownload);
-
-        viewModel.RightsConfirmed = true;
-
         Assert.True(viewModel.CanDownload);
         Assert.True(viewModel.DownloadCommand.CanExecute(null));
     }
@@ -190,8 +218,8 @@ public sealed class MainWindowViewModelTests
         Assert.Equal("Đã hoàn tất", item.StatusText);
         Assert.EndsWith("Video được phép.mp4", item.FilePath, StringComparison.Ordinal);
         Assert.Equal(TestData.OutputFolder, downloads.LastOutputFolder);
+        Assert.True(downloads.LastRequest?.RightsConfirmed);
         Assert.False(viewModel.HasActiveDownloads);
-        Assert.False(viewModel.RightsConfirmed);
         Assert.True(item.RemoveCommand.CanExecute(null));
     }
 
@@ -204,19 +232,50 @@ public sealed class MainWindowViewModelTests
             downloads,
             userData: userData);
         viewModel.SelectedDownloadFormat = viewModel.DownloadFormatOptions.Single(
-            item => item.Format == DownloadFormat.Mp3);
+            item => item.Format == DownloadMediaFormat.AudioMp3);
 
         viewModel.DownloadCommand.Execute(null);
         await Assert.Single(viewModel.DownloadQueue).StartAsync();
         await viewModel.PrepareForCloseAsync();
 
         Assert.Equal(QualityPreset.AudioMp3, downloads.LastRequest?.Options.QualityPreset);
+        Assert.Equal(
+            DownloadMediaFormat.AudioMp3,
+            downloads.LastRequest?.Options.MediaFormat);
         Assert.Equal(QualityPreset.AudioMp3, Assert.Single(userData.SavedSettings).DefaultQuality);
+        Assert.Equal(
+            DownloadMediaFormat.AudioMp3,
+            Assert.Single(userData.SavedSettings).DefaultFormat);
         Assert.True(viewModel.IsMp3FormatSelected);
     }
 
     [Fact]
-    public async Task ChangingUrl_ClearsPreviousMetadataAndRightsConfirmation()
+    public async Task Download_OriginalSelectionPreservesFormatAndPersistsSelection()
+    {
+        var downloads = new FakeDownloadCoordinator();
+        var userData = new FakeUserDataService();
+        using var viewModel = await CreateAnalyzedViewModelAsync(
+            downloads,
+            userData: userData);
+        viewModel.SelectedDownloadFormat = viewModel.DownloadFormatOptions.Single(
+            item => item.Format == DownloadMediaFormat.VideoOriginal);
+
+        viewModel.DownloadCommand.Execute(null);
+        await Assert.Single(viewModel.DownloadQueue).StartAsync();
+        await viewModel.PrepareForCloseAsync();
+
+        Assert.Equal(
+            DownloadMediaFormat.VideoOriginal,
+            downloads.LastRequest?.Options.MediaFormat);
+        Assert.Equal(QualityPreset.Best, downloads.LastRequest?.Options.QualityPreset);
+        Assert.Equal(
+            DownloadMediaFormat.VideoOriginal,
+            Assert.Single(userData.SavedSettings).DefaultFormat);
+        Assert.True(viewModel.IsVideoFormatSelected);
+    }
+
+    [Fact]
+    public async Task ChangingUrl_ClearsPreviousMetadataAndDisablesDownload()
     {
         using var viewModel = await CreateAnalyzedViewModelAsync();
 
@@ -224,7 +283,6 @@ public sealed class MainWindowViewModelTests
 
         Assert.True(viewModel.IsAnalysisEmpty);
         Assert.Null(viewModel.VideoInfo);
-        Assert.False(viewModel.RightsConfirmed);
         Assert.False(viewModel.DownloadCommand.CanExecute(null));
     }
 
@@ -283,12 +341,14 @@ public sealed class MainWindowViewModelTests
             userData: userData);
         viewModel.VideoUrl = TestData.VideoUrl;
         await viewModel.AnalyzeCommand.ExecuteAsync();
-        viewModel.RightsConfirmed = true;
 
         viewModel.DownloadCommand.Execute(null);
         await Assert.Single(viewModel.DownloadQueue).StartAsync();
 
         Assert.Single(userData.History);
+        Assert.Equal(
+            DownloadMediaFormat.VideoMp4,
+            Assert.Single(userData.History).Format);
         Assert.Single(viewModel.DownloadHistory);
         await viewModel.ClearHistoryCommand.ExecuteAsync();
         Assert.Empty(userData.History);
@@ -371,7 +431,6 @@ public sealed class MainWindowViewModelTests
             userData: userData);
         viewModel.VideoUrl = TestData.VideoUrl;
         await viewModel.AnalyzeCommand.ExecuteAsync();
-        viewModel.RightsConfirmed = true;
         return viewModel;
     }
 }

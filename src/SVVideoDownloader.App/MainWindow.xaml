@@ -243,6 +243,20 @@
                             </ComboBox.ItemTemplate>
                         </ComboBox>
 
+                        <TextBlock Margin="0,10,0,0"
+                                   FontSize="12"
+                                   Style="{StaticResource SecondaryText}"
+                                   Text="Ưu tiên H.264/AAC để phát trên nhiều thiết bị; FFmpeg sẽ chuyển sang MP4 khi cần."
+                                   TextWrapping="Wrap"
+                                   Visibility="{Binding IsMp4FormatSelected, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+                        <TextBlock Margin="0,10,0,0"
+                                   FontSize="12"
+                                   Style="{StaticResource SecondaryText}"
+                                   Text="Giữ các luồng tốt nhất mà nguồn cung cấp, không mã hóa lại; tệp có thể là MP4, WebM hoặc MKV."
+                                   TextWrapping="Wrap"
+                                   Visibility="{Binding IsOriginalFormatSelected, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
                         <StackPanel Visibility="{Binding IsVideoFormatSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <Label Margin="0,14,0,0"
                                    Padding="0,0,0,6"
@@ -288,14 +302,11 @@
                                     AutomationProperties.Name="Chọn thư mục lưu" />
                         </Grid>
 
-                        <CheckBox Margin="0,18,0,0"
-                                  IsChecked="{Binding RightsConfirmed}"
-                                  VerticalContentAlignment="Top"
-                                  AutomationProperties.Name="Xác nhận quyền tải nội dung">
-                            <TextBlock MaxWidth="330"
-                                       Text="Tôi xác nhận mình sở hữu nội dung hoặc được phép tải nội dung này."
-                                       TextWrapping="Wrap" />
-                        </CheckBox>
+                        <TextBlock Margin="0,18,0,0"
+                                   MaxWidth="330"
+                                   Style="{StaticResource SecondaryText}"
+                                   Text="Chỉ tải nội dung bạn sở hữu hoặc được phép tải. Khi bấm nút bên dưới, bạn xác nhận có quyền tải nội dung này."
+                                   TextWrapping="Wrap" />
 
                         <TextBlock Margin="0,10,0,0"
                                    Foreground="{DynamicResource ErrorTextBrush}"
@@ -309,12 +320,13 @@
                                    TextWrapping="Wrap"
                                    Visibility="{Binding HasSettingsMessage, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
-                        <Button Margin="0,18,0,0"
+                        <Button x:Name="DownloadButton"
+                                Margin="0,18,0,0"
                                 MinHeight="42"
                                 Style="{StaticResource PrimaryButton}"
                                 Command="{Binding DownloadCommand}"
-                                Content="_Tải xuống"
-                                AutomationProperties.HelpText="Thêm video vào hàng đợi tải xuống" />
+                                Content="_Xác nhận quyền và tải xuống"
+                                AutomationProperties.HelpText="Xác nhận bạn có quyền tải nội dung rồi thêm vào hàng đợi" />
                     </StackPanel>
                 </Border>
             </Grid>
@@ -534,10 +546,14 @@
                                                             <Run Text="Nguồn: " />
                                                             <Run Text="{Binding SourceText, Mode=OneWay}" />
                                                         </TextBlock>
-                                                        <TextBlock Margin="0,0,18,0">
-                                                            <Run Text="Chất lượng: " />
-                                                            <Run Text="{Binding QualityText, Mode=OneWay}" />
-                                                        </TextBlock>
+                                                         <TextBlock Margin="0,0,18,0">
+                                                             <Run Text="Định dạng: " />
+                                                             <Run Text="{Binding FormatText, Mode=OneWay}" />
+                                                         </TextBlock>
+                                                         <TextBlock Margin="0,0,18,0">
+                                                             <Run Text="Chất lượng: " />
+                                                             <Run Text="{Binding QualityText, Mode=OneWay}" />
+                                                         </TextBlock>
                                                         <TextBlock>
                                                             <Run Text="Hoàn tất: " />
                                                             <Run Text="{Binding CompletedAtText, Mode=OneWay}" />

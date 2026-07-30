@@ -1,3 +1,4 @@
+using SVVideoDownloader.Core.Downloads;
 using SVVideoDownloader.Core.Videos;
 using SVVideoDownloader.Infrastructure.ApplicationData;
 using SVVideoDownloader.Infrastructure.Tests.Fakes;
@@ -30,14 +31,19 @@ public sealed class ApplicationDataStoreTests
         var expected = new ApplicationSettings(
             Path.Combine(directory.Path, "video"),
             QualityPreset.Video1080p,
-            ApplicationTheme.Dark);
+            ApplicationTheme.Dark,
+            DownloadMediaFormat.VideoOriginal);
 
         await store.SaveAsync(expected);
         var loaded = await store.LoadAsync(
-            new ApplicationSettings(directory.Path, QualityPreset.Best));
+            new ApplicationSettings(
+                directory.Path,
+                QualityPreset.Best,
+                DefaultFormat: DownloadMediaFormat.VideoMp4));
 
         Assert.Equal(expected, loaded);
         Assert.Equal(ApplicationTheme.Dark, loaded.Theme);
+        Assert.Equal(DownloadMediaFormat.VideoOriginal, loaded.DefaultFormat);
         Assert.DoesNotContain(".tmp", Directory.GetFiles(directory.Path).Single());
     }
 
@@ -49,7 +55,10 @@ public sealed class ApplicationDataStoreTests
         await File.WriteAllTextAsync(settingsPath, "{ token=private-secret");
         var logger = new RecordingDiagnosticLogger();
         using var store = new JsonApplicationSettingsStore(settingsPath, logger);
-        var defaults = new ApplicationSettings(directory.Path, QualityPreset.Best);
+        var defaults = new ApplicationSettings(
+            directory.Path,
+            QualityPreset.Best,
+            DefaultFormat: DownloadMediaFormat.VideoMp4);
 
         var loaded = await store.LoadAsync(defaults);
 
@@ -77,10 +86,43 @@ public sealed class ApplicationDataStoreTests
             new RecordingDiagnosticLogger());
 
         var loaded = await store.LoadAsync(
-            new ApplicationSettings(directory.Path, QualityPreset.Best));
+            new ApplicationSettings(
+                directory.Path,
+                QualityPreset.Best,
+                DefaultFormat: DownloadMediaFormat.VideoMp4));
 
         Assert.Equal(ApplicationTheme.Light, loaded.Theme);
         Assert.Equal(QualityPreset.Video720p, loaded.DefaultQuality);
+        Assert.Equal(DownloadMediaFormat.VideoMp4, loaded.DefaultFormat);
+    }
+
+    [Fact]
+    public async Task LegacyMp3SettingsMigrateToAudioFormat()
+    {
+        using var directory = new TemporaryTestDirectory();
+        var settingsPath = Path.Combine(directory.Path, "settings.json");
+        await File.WriteAllTextAsync(
+            settingsPath,
+            $$"""
+            {
+              "DownloadDirectory": "{{directory.Path.Replace("\\", "\\\\", StringComparison.Ordinal)}}",
+              "DefaultQuality": "AudioMp3",
+              "Theme": "Dark"
+            }
+            """);
+        using var store = new JsonApplicationSettingsStore(
+            settingsPath,
+            new RecordingDiagnosticLogger());
+
+        var loaded = await store.LoadAsync(
+            new ApplicationSettings(
+                directory.Path,
+                QualityPreset.Best,
+                DefaultFormat: DownloadMediaFormat.VideoMp4));
+
+        Assert.Equal(QualityPreset.AudioMp3, loaded.DefaultQuality);
+        Assert.Equal(DownloadMediaFormat.AudioMp3, loaded.DefaultFormat);
+        Assert.Equal(ApplicationTheme.Dark, loaded.Theme);
     }
 
     [Fact]
@@ -108,6 +150,30 @@ public sealed class ApplicationDataStoreTests
         Assert.Empty(history);
         Assert.True(File.Exists(mediaPath));
         Assert.Equal("owned media fixture", await File.ReadAllTextAsync(mediaPath));
+    }
+
+    [Fact]
+    public async Task HistoryRoundTripRemembersOriginalVideoFormat()
+    {
+        using var directory = new TemporaryTestDirectory();
+        var storePath = Path.Combine(directory.Path, "history.json");
+        using var store = new JsonDownloadHistoryStore(
+            storePath,
+            new RecordingDiagnosticLogger());
+        var expected = new DownloadHistoryEntry(
+            Guid.NewGuid(),
+            "Video gốc",
+            SupportedPlatform.YouTube,
+            QualityPreset.Best,
+            Path.Combine(directory.Path, "video.webm"),
+            DateTimeOffset.UtcNow,
+            DownloadMediaFormat.VideoOriginal);
+
+        await store.AddAsync(expected);
+        var loaded = Assert.Single(await store.LoadAsync());
+
+        Assert.Equal(expected, loaded);
+        Assert.Equal(DownloadMediaFormat.VideoOriginal, loaded.Format);
     }
 
     [Fact]

@@ -33,7 +33,6 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     private VideoInfo? _videoInfo;
     private DownloadFormatOptionViewModel? _selectedDownloadFormat;
     private QualityOptionViewModel? _selectedQuality;
-    private bool _rightsConfirmed;
     private AnalysisState _analysisState = AnalysisState.Empty;
     private string _folderErrorMessage = string.Empty;
     private string _settingsMessage = string.Empty;
@@ -82,8 +81,9 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         _outputFolder = options.DefaultOutputFolder;
         DownloadFormatOptions =
         [
-            new(DownloadFormat.Video, "MP4 (video)"),
-            new(DownloadFormat.Mp3, "MP3 (âm thanh)"),
+            new(DownloadMediaFormat.VideoMp4, "MP4 tương thích"),
+            new(DownloadMediaFormat.VideoOriginal, "Chất lượng gốc tốt nhất"),
+            new(DownloadMediaFormat.AudioMp3, "MP3 (âm thanh)"),
         ];
         QualityOptions =
         [
@@ -93,9 +93,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             new(QualityPreset.Video480p, "Video 480p"),
         ];
         _selectedDownloadFormat = DownloadFormatOptions.First(
-            item => item.Format == (options.DefaultQuality == QualityPreset.AudioMp3
-                ? DownloadFormat.Mp3
-                : DownloadFormat.Video));
+            item => item.Format == options.DefaultFormat);
         _selectedQuality = QualityOptions.FirstOrDefault(item => item.Preset == options.DefaultQuality)
             ?? QualityOptions[0];
         _themeService.Apply(options.DefaultTheme);
@@ -124,7 +122,6 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         {
             if (SetProperty(ref _videoUrl, value))
             {
-                RightsConfirmed = false;
                 if (_analysisState != AnalysisState.Empty || VideoInfo is not null)
                 {
                     _analysisCancellationSource?.Cancel();
@@ -162,6 +159,8 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             if (SetProperty(ref _selectedDownloadFormat, value))
             {
                 OnPropertyChanged(nameof(IsVideoFormatSelected));
+                OnPropertyChanged(nameof(IsMp4FormatSelected));
+                OnPropertyChanged(nameof(IsOriginalFormatSelected));
                 OnPropertyChanged(nameof(IsMp3FormatSelected));
                 DownloadCommand.NotifyCanExecuteChanged();
                 QueueSettingsSave();
@@ -170,10 +169,17 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     }
 
     public bool IsVideoFormatSelected =>
-        SelectedDownloadFormat?.Format == DownloadFormat.Video;
+        SelectedDownloadFormat?.Format is
+            DownloadMediaFormat.VideoMp4 or DownloadMediaFormat.VideoOriginal;
+
+    public bool IsMp4FormatSelected =>
+        SelectedDownloadFormat?.Format == DownloadMediaFormat.VideoMp4;
+
+    public bool IsOriginalFormatSelected =>
+        SelectedDownloadFormat?.Format == DownloadMediaFormat.VideoOriginal;
 
     public bool IsMp3FormatSelected =>
-        SelectedDownloadFormat?.Format == DownloadFormat.Mp3;
+        SelectedDownloadFormat?.Format == DownloadMediaFormat.AudioMp3;
 
     public IReadOnlyList<QualityOptionViewModel> QualityOptions { get; }
 
@@ -186,18 +192,6 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             {
                 DownloadCommand.NotifyCanExecuteChanged();
                 QueueSettingsSave();
-            }
-        }
-    }
-
-    public bool RightsConfirmed
-    {
-        get => _rightsConfirmed;
-        set
-        {
-            if (SetProperty(ref _rightsConfirmed, value))
-            {
-                DownloadCommand.NotifyCanExecuteChanged();
             }
         }
     }
@@ -250,8 +244,8 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
     public bool CanDownload =>
         VideoInfo is not null &&
+        GetSelectedFormat() is not null &&
         GetSelectedPreset() is not null &&
-        RightsConfirmed &&
         !IsToolUpdateActive &&
         !string.IsNullOrWhiteSpace(OutputFolder);
 
@@ -591,17 +585,24 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
     private void AddDownload()
     {
+        var selectedFormat = GetSelectedFormat();
         var selectedPreset = GetSelectedPreset();
-        if (!CanDownload || VideoInfo is null || selectedPreset is null)
+        if (!CanDownload ||
+            VideoInfo is null ||
+            selectedFormat is null ||
+            selectedPreset is null)
         {
             return;
         }
 
-        var optionsResult = DownloadOptions.Create(selectedPreset.Value, VideoInfo.Title);
+        var optionsResult = DownloadOptions.Create(
+            selectedFormat.Value,
+            selectedPreset.Value,
+            VideoInfo.Title);
         var requestResult = DownloadRequest.Create(
             VideoInfo.Source,
             optionsResult.Value,
-            RightsConfirmed);
+            rightsConfirmed: true);
 
         if (!optionsResult.IsSuccess || !requestResult.IsSuccess)
         {
@@ -621,7 +622,6 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             RemoveDownload);
         item.StateChanged += OnDownloadStateChanged;
         DownloadQueue.Insert(0, item);
-        RightsConfirmed = false;
         NotifyQueueChanged();
         _ = item.StartAsync();
     }
@@ -685,7 +685,8 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             item.Platform,
             item.Quality,
             item.FilePath!,
-            DateTimeOffset.UtcNow);
+            DateTimeOffset.UtcNow,
+            item.Format);
         try
         {
             await _userDataService.AddHistoryAsync(entry);
@@ -824,8 +825,9 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
     private void QueueSettingsSave()
     {
+        var selectedFormat = GetSelectedFormat();
         var selectedPreset = GetSelectedPreset();
-        if (_disposed || selectedPreset is null)
+        if (_disposed || selectedFormat is null || selectedPreset is null)
         {
             return;
         }
@@ -833,7 +835,8 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         var settings = new ApplicationSettings(
             OutputFolder,
             selectedPreset.Value,
-            IsDarkMode ? ApplicationTheme.Dark : ApplicationTheme.Light);
+            IsDarkMode ? ApplicationTheme.Dark : ApplicationTheme.Light,
+            selectedFormat.Value);
         lock (_settingsSync)
         {
             _settingsSaveTask = SaveSettingsAfterAsync(_settingsSaveTask, settings);
@@ -883,10 +886,14 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     private QualityPreset? GetSelectedPreset() =>
         SelectedDownloadFormat?.Format switch
         {
-            DownloadFormat.Mp3 => QualityPreset.AudioMp3,
-            DownloadFormat.Video => SelectedQuality?.Preset,
+            DownloadMediaFormat.AudioMp3 => QualityPreset.AudioMp3,
+            DownloadMediaFormat.VideoMp4 or DownloadMediaFormat.VideoOriginal =>
+                SelectedQuality?.Preset,
             _ => null,
         };
+
+    private DownloadMediaFormat? GetSelectedFormat() =>
+        SelectedDownloadFormat?.Format;
 
     private void NotifyQueueChanged()
     {
